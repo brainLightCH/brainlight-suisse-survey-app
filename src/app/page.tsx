@@ -193,7 +193,7 @@ export default function ParticipantPage() {
         </p>
         {session.phase === "before" && (
           <p className="text-text-muted text-sm text-center mt-2">
-            Vous pouvez maintenant fermer ce dispositif et profitez de votre
+            Vous pouvez maintenant fermer ce dispositif et profiter de votre
             séance !
           </p>
         )}
