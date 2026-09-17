@@ -8,6 +8,35 @@ import type { Session } from "@/lib/types";
 
 type ViewState = "loading" | "no_session" | "pick_number" | "form" | "done";
 
+interface StoredSubmission {
+  sessionId: string;
+  phase: string;
+  participantNumber: number;
+}
+
+const SUBMISSION_STORAGE_KEY = "bl_last_submission";
+
+function readStoredSubmission(): StoredSubmission | null {
+  try {
+    const raw = window.localStorage.getItem(SUBMISSION_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as StoredSubmission) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredSubmission(submission: StoredSubmission) {
+  try {
+    window.localStorage.setItem(
+      SUBMISSION_STORAGE_KEY,
+      JSON.stringify(submission)
+    );
+  } catch {
+    // Private browsing or storage disabled: the confirmation screen just
+    // won't survive a refresh, which is no worse than before this feature.
+  }
+}
+
 export default function ParticipantPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [view, setView] = useState<ViewState>("loading");
@@ -42,6 +71,19 @@ export default function ParticipantPage() {
       }
 
       if (view === "loading" || view === "no_session") {
+        const stored = readStoredSubmission();
+        if (
+          stored &&
+          stored.sessionId === active.id &&
+          stored.phase === active.phase
+        ) {
+          setParticipantNumber(stored.participantNumber);
+          setLastSessionId(active.id);
+          setLastPhase(active.phase);
+          setView("done");
+          return;
+        }
+
         setView(active.type === "showcase" ? "form" : "pick_number");
         if (active.type === "showcase") {
           setParticipantNumber(1);
@@ -177,7 +219,14 @@ export default function ParticipantPage() {
           sessionId={session.id}
           phase={session.phase}
           participantNumber={participantNumber}
-          onSubmitted={() => setView("done")}
+          onSubmitted={() => {
+            writeStoredSubmission({
+              sessionId: session.id,
+              phase: session.phase,
+              participantNumber,
+            });
+            setView("done");
+          }}
         />
       </Centered>
     );
