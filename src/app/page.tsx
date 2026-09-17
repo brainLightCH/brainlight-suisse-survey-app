@@ -60,12 +60,16 @@ export default function ParticipantPage() {
   }, [fetchActive]);
 
   function restart() {
+    // Only reset state here — the polling effect depends on fetchActive,
+    // which is recreated once view/lastSessionId/lastPhase settle, and it
+    // will run the fresh fetch itself. Calling fetchActive() directly here
+    // would reuse this render's stale closure and re-trigger the "changed"
+    // state immediately.
     setSessionChanged(false);
     setParticipantNumber(null);
     setLastSessionId(null);
     setLastPhase(null);
     setView("loading");
-    fetchActive();
   }
 
   if (sessionChanged) {
