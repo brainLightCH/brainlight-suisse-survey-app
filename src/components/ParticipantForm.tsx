@@ -65,10 +65,10 @@ export default function ParticipantForm({
 
   return (
     <div className="w-full max-w-md flex flex-col gap-8">
-      <div className="flex flex-col gap-6">
-        <Slider label="Stress" value={stress} onChange={setStress} />
+      <div className="flex flex-col gap-6 bg-panel rounded-2xl p-5">
+        <Slider label="Niveau de stress" value={stress} onChange={setStress} />
         <Slider
-          label="Fatigue nerveuse"
+          label="Fatigue nerveuse et émotionnelle"
           value={fatigueNerveuse}
           onChange={setFatigueNerveuse}
         />

@@ -212,9 +212,14 @@ export default function ParticipantPage() {
   if (view === "form" && participantNumber !== null) {
     return (
       <Centered>
-        <h1 className="text-xl font-semibold mb-6 text-center">
-          {session.phase === "before" ? "Avant la séance" : "Après la séance"}
+        <h1 className="text-2xl font-semibold mb-2 text-center max-w-md">
+          {session.phase === "before"
+            ? "Comment vous sentez-vous maintenant ?"
+            : "Comment vous sentez-vous à présent ?"}
         </h1>
+        <p className="text-text-muted text-sm mb-6 text-center">
+          Déplacez les curseurs. 1 = très faible, 10 = très élevé.
+        </p>
         <ParticipantForm
           sessionId={session.id}
           phase={session.phase}
