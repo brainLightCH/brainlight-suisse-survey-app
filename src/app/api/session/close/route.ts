@@ -46,6 +46,7 @@ export async function POST(request: Request) {
     delta_stress: bucket.delta?.stress ?? null,
     delta_fatigue_nerveuse: bucket.delta?.fatigue_nerveuse ?? null,
     delta_fatigue_physique: bucket.delta?.fatigue_physique ?? null,
+    notes: session.notes,
   });
 
   if (historyError) {

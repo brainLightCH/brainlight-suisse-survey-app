@@ -186,6 +186,8 @@ function LiveSession({
   const [confirmClose, setConfirmClose] = useState(false);
   const [busy, setBusy] = useState(false);
   const [togglingNumber, setTogglingNumber] = useState<number | null>(null);
+  const [notes, setNotes] = useState(session.notes ?? "");
+  const [savingNotes, setSavingNotes] = useState(false);
 
   const allNumbers = Array.from(
     { length: SESSION_TYPE_MAX_PARTICIPANTS[session.type] },
@@ -219,6 +221,22 @@ function LiveSession({
       if (res.ok) onChange(json.session);
     } finally {
       setTogglingNumber(null);
+    }
+  }
+
+  async function saveNotes() {
+    if (notes === (session.notes ?? "")) return;
+    setSavingNotes(true);
+    try {
+      const res = await fetch("/api/session/notes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: session.id, notes }),
+      });
+      const json = await res.json();
+      if (res.ok) onChange(json.session);
+    } finally {
+      setSavingNotes(false);
     }
   }
 
@@ -269,6 +287,13 @@ function LiveSession({
   async function handleClose() {
     setBusy(true);
     try {
+      if (notes !== (session.notes ?? "")) {
+        await fetch("/api/session/notes", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: session.id, notes }),
+        });
+      }
       const res = await fetch("/api/session/close", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -327,6 +352,23 @@ function LiveSession({
           {[...responded].filter((n) => activeSet.has(n)).length} /{" "}
           {activeSet.size} réponses reçues
         </p>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-sm text-text-muted">
+            Notes (optionnel)
+          </label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            onBlur={saveNotes}
+            placeholder="Remarques sur la séance…"
+            rows={3}
+            className="rounded-xl bg-panel-raised px-4 py-3 text-text placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-light resize-none"
+          />
+          {savingNotes && (
+            <p className="text-xs text-text-muted">Enregistrement…</p>
+          )}
+        </div>
 
         {session.phase === "before" && (
           <Button onClick={handleStart} disabled={busy}>

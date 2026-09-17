@@ -14,9 +14,13 @@ create table if not exists sessions (
   phase text not null default 'before' check (phase in ('before', 'after')),
   active_numbers jsonb not null default '[]'::jsonb,
   is_active boolean not null default true,
+  notes text,
   created_at timestamptz not null default now(),
   closed_at timestamptz
 );
+
+-- Migration : ajoute la colonne aux bases déjà créées avant son introduction.
+alter table sessions add column if not exists notes text;
 
 -- Une seule session active à la fois.
 create unique index if not exists sessions_single_active_idx
@@ -61,8 +65,12 @@ create table if not exists history (
   leads_count int not null default 0,
   delta_stress numeric,
   delta_fatigue_nerveuse numeric,
-  delta_fatigue_physique numeric
+  delta_fatigue_physique numeric,
+  notes text
 );
+
+-- Migration : ajoute la colonne aux bases déjà créées avant son introduction.
+alter table history add column if not exists notes text;
 
 create index if not exists history_sector_idx on history (sector);
 create index if not exists history_company_idx on history (company_name);

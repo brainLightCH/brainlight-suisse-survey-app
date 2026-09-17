@@ -10,6 +10,7 @@ export interface Session {
   phase: Phase;
   active_numbers: number[];
   is_active: boolean;
+  notes: string | null;
   created_at: string;
   closed_at: string | null;
 }
@@ -44,6 +45,7 @@ export interface HistoryRow {
   delta_stress: number | null;
   delta_fatigue_nerveuse: number | null;
   delta_fatigue_physique: number | null;
+  notes: string | null;
 }
 
 export interface RatingValues {
