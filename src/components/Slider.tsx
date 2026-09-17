@@ -4,21 +4,33 @@ interface SliderProps {
   label: string;
   value: number;
   onChange: (value: number) => void;
+  min?: number;
+  max?: number;
+  lowLabel?: string;
+  highLabel?: string;
 }
 
-export default function Slider({ label, value, onChange }: SliderProps) {
+export default function Slider({
+  label,
+  value,
+  onChange,
+  min = 1,
+  max = 10,
+  lowLabel = "faible",
+  highLabel = "élevé",
+}: SliderProps) {
   return (
     <div className="w-full">
-      <div className="flex items-baseline justify-between mb-2">
+      <div className="flex items-baseline justify-between mb-2 gap-4">
         <span className="text-text text-base font-medium">{label}</span>
-        <span className="font-mono text-2xl text-accent-light tabular-nums">
+        <span className="font-mono text-2xl text-accent-light tabular-nums shrink-0">
           {value}
         </span>
       </div>
       <input
         type="range"
-        min={1}
-        max={10}
+        min={min}
+        max={max}
         step={1}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
@@ -47,8 +59,12 @@ export default function Slider({ label, value, onChange }: SliderProps) {
         }}
       />
       <div className="flex justify-between text-xs text-text-muted mt-1">
-        <span>1 · faible</span>
-        <span>10 · élevé</span>
+        <span>
+          {min} · {lowLabel}
+        </span>
+        <span>
+          {max} · {highLabel}
+        </span>
       </div>
     </div>
   );

@@ -231,6 +231,7 @@ export default function ParticipantPage() {
         </p>
         <ParticipantForm
           sessionId={session.id}
+          sessionType={session.type}
           phase={session.phase}
           participantNumber={participantNumber}
           onSubmitted={() => {

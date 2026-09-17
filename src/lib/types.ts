@@ -24,6 +24,7 @@ export interface ResponseRow {
   fatigue_nerveuse: number;
   fatigue_physique: number;
   lead_optin: boolean;
+  usage_likelihood: number | null;
   prenom: string | null;
   nom: string | null;
   email: string | null;

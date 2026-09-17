@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Slider from "./Slider";
 import Button from "./Button";
-import type { Phase } from "@/lib/types";
+import type { Phase, SessionType } from "@/lib/types";
 
 interface ParticipantFormProps {
   sessionId: string;
+  sessionType: SessionType;
   phase: Phase;
   participantNumber: number;
   onSubmitted: () => void;
@@ -14,6 +15,7 @@ interface ParticipantFormProps {
 
 export default function ParticipantForm({
   sessionId,
+  sessionType,
   phase,
   participantNumber,
   onSubmitted,
@@ -21,6 +23,8 @@ export default function ParticipantForm({
   const [stress, setStress] = useState(5);
   const [fatigueNerveuse, setFatigueNerveuse] = useState(5);
   const [fatiguePhysique, setFatiguePhysique] = useState(5);
+  const [usageLikelihood, setUsageLikelihood] = useState(5);
+  const showUsageQuestion = phase === "after" && sessionType === "energy_days";
   const [leadOptin, setLeadOptin] = useState(false);
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
@@ -45,6 +49,7 @@ export default function ParticipantForm({
           fatigue_nerveuse: fatigueNerveuse,
           fatigue_physique: fatiguePhysique,
           lead_optin: phase === "after" ? leadOptin : false,
+          ...(showUsageQuestion ? { usage_likelihood: usageLikelihood } : {}),
           ...(phase === "after" && leadOptin
             ? { prenom, nom, email, telephone, entreprise }
             : {}),
@@ -78,6 +83,20 @@ export default function ParticipantForm({
           onChange={setFatiguePhysique}
         />
       </div>
+
+      {showUsageQuestion && (
+        <div className="bg-panel rounded-2xl p-5">
+          <Slider
+            label="Si un tel dispositif était présent dans votre entreprise, quelle est la probabilité que vous l'utiliseriez ?"
+            value={usageLikelihood}
+            onChange={setUsageLikelihood}
+            min={0}
+            max={10}
+            lowLabel="Pas du tout"
+            highLabel="Certainement"
+          />
+        </div>
+      )}
 
       {phase === "after" && (
         <div className="flex flex-col gap-4 bg-panel rounded-2xl p-5">

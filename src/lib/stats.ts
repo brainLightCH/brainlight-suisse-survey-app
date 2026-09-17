@@ -74,12 +74,24 @@ export function computeBucket(rows: RatingRow[]): StatsBucket {
       }
     : null;
 
+  // Percentage change relative to the "before" average, not a raw point
+  // difference — e.g. before 8, after 3 → -62.5 (a 62.5% reduction).
+  function percentChange(before: number, after: number): number {
+    return ((after - before) / before) * 100;
+  }
+
   const delta: RatingValues | null =
     avgBefore && avgAfter
       ? {
-          stress: avgAfter.stress - avgBefore.stress,
-          fatigue_nerveuse: avgAfter.fatigue_nerveuse - avgBefore.fatigue_nerveuse,
-          fatigue_physique: avgAfter.fatigue_physique - avgBefore.fatigue_physique,
+          stress: percentChange(avgBefore.stress, avgAfter.stress),
+          fatigue_nerveuse: percentChange(
+            avgBefore.fatigue_nerveuse,
+            avgAfter.fatigue_nerveuse
+          ),
+          fatigue_physique: percentChange(
+            avgBefore.fatigue_physique,
+            avgAfter.fatigue_physique
+          ),
         }
       : null;
 

@@ -32,6 +32,7 @@ export async function POST(request: Request) {
     fatigue_nerveuse,
     fatigue_physique,
     lead_optin,
+    usage_likelihood,
     prenom,
     nom,
     email,
@@ -42,12 +43,18 @@ export async function POST(request: Request) {
   const ratingsValid = [stress, fatigue_nerveuse, fatigue_physique].every(
     (v) => Number.isInteger(v) && v >= 1 && v <= 10
   );
+  const usageLikelihoodValid =
+    usage_likelihood === undefined ||
+    (Number.isInteger(usage_likelihood) &&
+      usage_likelihood >= 0 &&
+      usage_likelihood <= 10);
 
   if (
     !session_id ||
     !["before", "after"].includes(phase) ||
     !Number.isInteger(participant_number) ||
-    !ratingsValid
+    !ratingsValid ||
+    !usageLikelihoodValid
   ) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
@@ -78,6 +85,8 @@ export async function POST(request: Request) {
         fatigue_nerveuse,
         fatigue_physique,
         lead_optin: isLead,
+        usage_likelihood:
+          usage_likelihood === undefined ? null : usage_likelihood,
         prenom: isLead ? prenom ?? null : null,
         nom: isLead ? nom ?? null : null,
         email: isLead ? email ?? null : null,

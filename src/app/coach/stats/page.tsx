@@ -202,7 +202,7 @@ function BucketCard({
                     }`}
                   >
                     {bucket.delta![metric] > 0 ? "+" : ""}
-                    {bucket.delta![metric].toFixed(1)}
+                    {bucket.delta![metric].toFixed(0)}%
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-text-muted font-mono">

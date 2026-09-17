@@ -39,6 +39,7 @@ create table if not exists responses (
   fatigue_nerveuse int not null check (fatigue_nerveuse between 1 and 10),
   fatigue_physique int not null check (fatigue_physique between 1 and 10),
   lead_optin boolean not null default false,
+  usage_likelihood int check (usage_likelihood is null or usage_likelihood between 0 and 10),
   prenom text,
   nom text,
   email text,
@@ -47,6 +48,11 @@ create table if not exists responses (
   created_at timestamptz not null default now(),
   unique (session_id, phase, participant_number)
 );
+
+-- Migration : ajoute la colonne aux bases déjà créées avant son introduction.
+-- Energy Days uniquement, phase "après" : probabilité (0-10) que la personne
+-- utiliserait ce dispositif si présent dans son entreprise.
+alter table responses add column if not exists usage_likelihood int;
 
 create index if not exists responses_session_idx on responses (session_id);
 
