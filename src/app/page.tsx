@@ -18,6 +18,7 @@ export default function ParticipantPage() {
   const [lastPhase, setLastPhase] = useState<string | null>(null);
   const [sessionChanged, setSessionChanged] = useState(false);
   const [beforeNumbers, setBeforeNumbers] = useState<number[]>([]);
+  const [respondedNumbers, setRespondedNumbers] = useState<number[]>([]);
 
   const fetchActive = useCallback(async () => {
     try {
@@ -61,16 +62,24 @@ export default function ParticipantPage() {
   }, [fetchActive]);
 
   useEffect(() => {
-    if (view !== "pick_number" || !session || session.phase !== "after") {
+    if (view !== "pick_number" || !session) {
       return;
     }
     fetch(`/api/responses?session_id=${session.id}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((json) => {
-        const nums: number[] = (json.responses ?? [])
-          .filter((r: { phase: string }) => r.phase === "before")
-          .map((r: { participant_number: number }) => r.participant_number);
-        setBeforeNumbers(nums);
+        const responses: { phase: string; participant_number: number }[] =
+          json.responses ?? [];
+        setBeforeNumbers(
+          responses
+            .filter((r) => r.phase === "before")
+            .map((r) => r.participant_number)
+        );
+        setRespondedNumbers(
+          responses
+            .filter((r) => r.phase === session.phase)
+            .map((r) => r.participant_number)
+        );
       })
       .catch(() => {
         // Keep last known list; grid just stays as-is until the next try.
@@ -128,10 +137,13 @@ export default function ParticipantPage() {
   }
 
   if (view === "pick_number") {
-    const disabledNumbers =
+    const notEligible =
       session.phase === "after"
         ? session.active_numbers.filter((n) => !beforeNumbers.includes(n))
         : [];
+    const disabledNumbers = Array.from(
+      new Set([...notEligible, ...respondedNumbers])
+    );
 
     return (
       <Centered>
