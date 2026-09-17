@@ -212,6 +212,15 @@ export default function ParticipantPage() {
   if (view === "form" && participantNumber !== null) {
     return (
       <Centered>
+        <span className="inline-flex items-center gap-2 rounded-full bg-panel-raised text-accent-light text-xs font-mono uppercase tracking-wide px-3 py-1 mb-4">
+          {session.type !== "showcase" && (
+            <>
+              Participant n°{participantNumber}
+              <span className="text-text-muted">·</span>
+            </>
+          )}
+          {session.phase === "before" ? "Avant séance" : "Après séance"}
+        </span>
         <h1 className="text-2xl font-semibold mb-2 text-center max-w-md">
           {session.phase === "before"
             ? "Comment vous sentez-vous maintenant ?"
