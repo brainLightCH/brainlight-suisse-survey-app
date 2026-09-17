@@ -180,6 +180,9 @@ function LiveSession({
   onChange: (s: Session | null) => void;
 }) {
   const [responded, setResponded] = useState<Set<number>>(new Set());
+  const [beforeResponded, setBeforeResponded] = useState<Set<number>>(
+    new Set()
+  );
   const [confirmClose, setConfirmClose] = useState(false);
   const [busy, setBusy] = useState(false);
   const [togglingNumber, setTogglingNumber] = useState<number | null>(null);
@@ -192,7 +195,14 @@ function LiveSession({
 
   async function toggleNumber(n: number) {
     if (togglingNumber !== null) return;
-    const next = activeSet.has(n)
+    const isActive = activeSet.has(n);
+    // Once the after phase has started, a number that never answered
+    // "before" can't be turned back on — it would never produce a
+    // matched pair, so the data would stay incomplete.
+    if (!isActive && session.phase === "after" && !beforeResponded.has(n)) {
+      return;
+    }
+    const next = isActive
       ? session.active_numbers.filter((x) => x !== n)
       : [...session.active_numbers, n].sort((a, b) => a - b);
     setTogglingNumber(n);
@@ -217,12 +227,22 @@ function LiveSession({
       cache: "no-store",
     });
     const json = await res.json();
-    const nums = new Set<number>(
-      (json.responses ?? [])
-        .filter((r: { phase: string }) => r.phase === session.phase)
-        .map((r: { participant_number: number }) => r.participant_number)
+    const all: { phase: string; participant_number: number }[] =
+      json.responses ?? [];
+    setResponded(
+      new Set(
+        all
+          .filter((r) => r.phase === session.phase)
+          .map((r) => r.participant_number)
+      )
     );
-    setResponded(nums);
+    setBeforeResponded(
+      new Set(
+        all
+          .filter((r) => r.phase === "before")
+          .map((r) => r.participant_number)
+      )
+    );
   }, [session.id, session.phase]);
 
   useEffect(() => {
@@ -278,16 +298,20 @@ function LiveSession({
           {allNumbers.map((n) => {
             const active = activeSet.has(n);
             const done = active && responded.has(n);
+            const locked =
+              !active && session.phase === "after" && !beforeResponded.has(n);
             return (
               <button
                 key={n}
                 onClick={() => toggleNumber(n)}
-                disabled={togglingNumber !== null}
-                className={`aspect-square rounded-xl flex items-center justify-center font-mono text-lg font-semibold transition disabled:cursor-wait ${
+                disabled={togglingNumber !== null || locked}
+                className={`aspect-square rounded-xl flex items-center justify-center font-mono text-lg font-semibold transition disabled:cursor-not-allowed ${
                   done
                     ? "bg-success/20 text-success border border-success"
                     : active
                     ? "bg-panel-raised text-text-muted hover:brightness-110"
+                    : locked
+                    ? "bg-transparent text-text-muted/10 border border-dashed border-panel-raised/40"
                     : "bg-transparent text-text-muted/30 border border-dashed border-panel-raised hover:text-text-muted/60"
                 }`}
               >
