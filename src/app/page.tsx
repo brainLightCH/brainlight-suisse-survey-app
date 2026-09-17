@@ -191,6 +191,12 @@ export default function ParticipantPage() {
         <p className="text-text-muted text-sm text-center mt-2">
           Vos réponses ont bien été enregistrées.
         </p>
+        {session.phase === "before" && (
+          <p className="text-text-muted text-sm text-center mt-2">
+            Vous pouvez maintenant fermer ce dispositif et profitez de votre
+            séance !
+          </p>
+        )}
       </Centered>
     );
   }
