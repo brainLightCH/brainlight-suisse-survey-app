@@ -182,6 +182,35 @@ function LiveSession({
   const [responded, setResponded] = useState<Set<number>>(new Set());
   const [confirmClose, setConfirmClose] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [togglingNumber, setTogglingNumber] = useState<number | null>(null);
+
+  const allNumbers = Array.from(
+    { length: SESSION_TYPE_MAX_PARTICIPANTS[session.type] },
+    (_, i) => i + 1
+  );
+  const activeSet = new Set(session.active_numbers);
+
+  async function toggleNumber(n: number) {
+    if (togglingNumber !== null) return;
+    const next = activeSet.has(n)
+      ? session.active_numbers.filter((x) => x !== n)
+      : [...session.active_numbers, n].sort((a, b) => a - b);
+    setTogglingNumber(n);
+    try {
+      const res = await fetch("/api/session/numbers", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: session.id,
+          active_numbers: next,
+        }),
+      });
+      const json = await res.json();
+      if (res.ok) onChange(json.session);
+    } finally {
+      setTogglingNumber(null);
+    }
+  }
 
   const fetchResponses = useCallback(async () => {
     const res = await fetch(`/api/responses?session_id=${session.id}`, {
@@ -246,21 +275,33 @@ function LiveSession({
         </div>
 
         <div className="grid grid-cols-5 gap-2">
-          {session.active_numbers.map((n) => (
-            <div
-              key={n}
-              className={`aspect-square rounded-xl flex items-center justify-center font-mono text-lg font-semibold ${
-                responded.has(n)
-                  ? "bg-success/20 text-success border border-success"
-                  : "bg-panel-raised text-text-muted"
-              }`}
-            >
-              {n}
-            </div>
-          ))}
+          {allNumbers.map((n) => {
+            const active = activeSet.has(n);
+            const done = active && responded.has(n);
+            return (
+              <button
+                key={n}
+                onClick={() => toggleNumber(n)}
+                disabled={togglingNumber !== null}
+                className={`aspect-square rounded-xl flex items-center justify-center font-mono text-lg font-semibold transition disabled:cursor-wait ${
+                  done
+                    ? "bg-success/20 text-success border border-success"
+                    : active
+                    ? "bg-panel-raised text-text-muted hover:brightness-110"
+                    : "bg-transparent text-text-muted/30 border border-dashed border-panel-raised hover:text-text-muted/60"
+                }`}
+              >
+                {n}
+              </button>
+            );
+          })}
         </div>
+        <p className="text-text-muted text-xs text-center -mt-3">
+          Clique sur un numéro pour l&apos;activer ou le désactiver
+        </p>
         <p className="text-text-muted text-sm text-center">
-          {responded.size} / {session.active_numbers.length} réponses reçues
+          {[...responded].filter((n) => activeSet.has(n)).length} /{" "}
+          {activeSet.size} réponses reçues
         </p>
 
         {session.phase === "before" && (
