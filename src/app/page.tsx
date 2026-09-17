@@ -17,6 +17,7 @@ export default function ParticipantPage() {
   const [lastSessionId, setLastSessionId] = useState<string | null>(null);
   const [lastPhase, setLastPhase] = useState<string | null>(null);
   const [sessionChanged, setSessionChanged] = useState(false);
+  const [beforeNumbers, setBeforeNumbers] = useState<number[]>([]);
 
   const fetchActive = useCallback(async () => {
     try {
@@ -58,6 +59,23 @@ export default function ParticipantPage() {
     const interval = setInterval(fetchActive, 3000);
     return () => clearInterval(interval);
   }, [fetchActive]);
+
+  useEffect(() => {
+    if (view !== "pick_number" || !session || session.phase !== "after") {
+      return;
+    }
+    fetch(`/api/responses?session_id=${session.id}`, { cache: "no-store" })
+      .then((res) => res.json())
+      .then((json) => {
+        const nums: number[] = (json.responses ?? [])
+          .filter((r: { phase: string }) => r.phase === "before")
+          .map((r: { participant_number: number }) => r.participant_number);
+        setBeforeNumbers(nums);
+      })
+      .catch(() => {
+        // Keep last known list; grid just stays as-is until the next try.
+      });
+  }, [view, session]);
 
   function restart() {
     // Only reset state here — the polling effect depends on fetchActive,
@@ -110,6 +128,11 @@ export default function ParticipantPage() {
   }
 
   if (view === "pick_number") {
+    const disabledNumbers =
+      session.phase === "after"
+        ? session.active_numbers.filter((n) => !beforeNumbers.includes(n))
+        : [];
+
     return (
       <Centered>
         <h1 className="text-xl font-semibold mb-1 text-center">
@@ -120,6 +143,7 @@ export default function ParticipantPage() {
         </p>
         <NumberGrid
           numbers={session.active_numbers}
+          disabledNumbers={disabledNumbers}
           onSelect={(n) => {
             setParticipantNumber(n);
             setLastSessionId(session.id);
