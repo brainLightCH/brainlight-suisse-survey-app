@@ -57,15 +57,7 @@ export default function ParticipantPage() {
     fetchActive();
     const interval = setInterval(fetchActive, 3000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (view === "form" || view === "done") {
-      const interval = setInterval(fetchActive, 3000);
-      return () => clearInterval(interval);
-    }
-  }, [view, fetchActive]);
+  }, [fetchActive]);
 
   function restart() {
     setSessionChanged(false);
