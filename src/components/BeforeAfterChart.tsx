@@ -14,16 +14,6 @@ const METRICS: { key: keyof RatingValues; label: string }[] = [
   { key: "fatigue_physique", label: "Fatigue physique" },
 ];
 
-// 0 → green, 10 → red, passing through yellow/orange — matches the
-// severity scale brainLight uses on the printed prototype (bar height
-// already encodes the exact value, so color here is a redundant, not
-// sole, channel).
-function valueToColor(value: number): string {
-  const clamped = Math.max(0, Math.min(10, value));
-  const hue = 130 - (clamped / 10) * 130; // 130 (green) → 0 (red)
-  return `hsl(${hue}, 70%, 48%)`;
-}
-
 const CHART_HEIGHT = 180;
 const GROUP_WIDTH = 110;
 const BAR_WIDTH = 34;
@@ -46,6 +36,26 @@ export default function BeforeAfterChart({
           role="img"
           aria-label="Comparaison avant/après par indicateur"
         >
+          <defs>
+            {/* One fixed gradient across the whole 0-10 axis — every bar
+                reads from the same absolute scale (userSpaceOnUse, not
+                objectBoundingBox), so a short bar just reveals the green
+                end and a tall bar reveals further up toward red, instead
+                of each bar getting its own single solid color. */}
+            <linearGradient
+              id="severity-gradient"
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={CHART_TOP_PAD + CHART_HEIGHT}
+              x2={0}
+              y2={CHART_TOP_PAD}
+            >
+              <stop offset="0%" stopColor="hsl(130, 70%, 48%)" />
+              <stop offset="50%" stopColor="hsl(65, 70%, 48%)" />
+              <stop offset="100%" stopColor="hsl(0, 70%, 48%)" />
+            </linearGradient>
+          </defs>
+
           {[0, 2, 4, 6, 8, 10].map((tick) => {
             const y = CHART_TOP_PAD + CHART_HEIGHT - (tick / 10) * CHART_HEIGHT;
             return (
@@ -88,7 +98,7 @@ export default function BeforeAfterChart({
                   width={BAR_WIDTH}
                   height={beforeH}
                   rx={4}
-                  fill={valueToColor(beforeVal)}
+                  fill="url(#severity-gradient)"
                 />
                 <text
                   x={groupX + BAR_WIDTH / 2}
@@ -107,7 +117,7 @@ export default function BeforeAfterChart({
                   width={BAR_WIDTH}
                   height={afterH}
                   rx={4}
-                  fill={valueToColor(afterVal)}
+                  fill="url(#severity-gradient)"
                 />
                 <text
                   x={groupX + BAR_WIDTH + 8 + BAR_WIDTH / 2}
