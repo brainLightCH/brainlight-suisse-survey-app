@@ -106,6 +106,126 @@ export function computeBucket(rows: RatingRow[]): StatsBucket {
   };
 }
 
+export interface LatestEnergyDaysSummary {
+  event_name: string;
+  company_name: string | null;
+  sector: string | null;
+  created_at: string;
+  closed_at: string | null;
+  bucket: StatsBucket;
+}
+
+export async function getLatestEnergyDaysSummary(): Promise<LatestEnergyDaysSummary | null> {
+  const { data: session, error: sessionError } = await supabaseAdmin
+    .from("sessions")
+    .select("id, event_name, company_name, sector, created_at, closed_at")
+    .eq("type", "energy_days")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (sessionError) throw sessionError;
+  if (!session) return null;
+
+  const { data: responses, error: responsesError } = await supabaseAdmin
+    .from("responses")
+    .select(
+      "session_id, phase, participant_number, stress, fatigue_nerveuse, fatigue_physique, lead_optin"
+    )
+    .eq("session_id", session.id);
+
+  if (responsesError) throw responsesError;
+
+  return {
+    event_name: session.event_name,
+    company_name: session.company_name,
+    sector: session.sector,
+    created_at: session.created_at,
+    closed_at: session.closed_at,
+    bucket: computeBucket(responses ?? []),
+  };
+}
+
+export interface ExportRow {
+  event_name: string;
+  type: string;
+  company_name: string | null;
+  sector: string | null;
+  created_at: string;
+  participant_number: number;
+  stress_before: number;
+  stress_after: number;
+  fatigue_nerveuse_before: number;
+  fatigue_nerveuse_after: number;
+  fatigue_physique_before: number;
+  fatigue_physique_after: number;
+  lead_optin: boolean;
+  usage_likelihood: number | null;
+}
+
+export async function getExportRows(filters: StatsFilters): Promise<ExportRow[]> {
+  let query = supabaseAdmin
+    .from("responses")
+    .select(
+      "session_id, phase, participant_number, stress, fatigue_nerveuse, fatigue_physique, lead_optin, usage_likelihood, sessions!inner(event_name, type, sector, company_name, created_at)"
+    );
+
+  if (filters.type) query = query.eq("sessions.type", filters.type);
+  if (filters.sector) query = query.eq("sessions.sector", filters.sector);
+  if (filters.company) query = query.eq("sessions.company_name", filters.company);
+  if (filters.from) query = query.gte("sessions.created_at", filters.from);
+  if (filters.to) query = query.lte("sessions.created_at", filters.to);
+
+  const { data, error } = await query;
+  if (error) throw error;
+
+  interface ExportJoinedRow extends RatingRow {
+    usage_likelihood: number | null;
+    sessions: {
+      event_name: string;
+      type: string;
+      sector: string | null;
+      company_name: string | null;
+      created_at: string;
+    } | null;
+  }
+
+  const rows = (data ?? []) as unknown as ExportJoinedRow[];
+
+  const byParticipant = new Map<
+    string,
+    { before?: ExportJoinedRow; after?: ExportJoinedRow }
+  >();
+  for (const row of rows) {
+    const key = `${row.session_id}:${row.participant_number}`;
+    const entry = byParticipant.get(key) ?? {};
+    entry[row.phase] = row;
+    byParticipant.set(key, entry);
+  }
+
+  const matched = [...byParticipant.values()].filter(
+    (e): e is { before: ExportJoinedRow; after: ExportJoinedRow } =>
+      Boolean(e.before && e.after)
+  );
+
+  return matched.map(({ before, after }) => ({
+    event_name: after.sessions?.event_name ?? "",
+    type: after.sessions?.type ?? "",
+    company_name: after.sessions?.company_name ?? null,
+    sector: after.sessions?.sector ?? null,
+    created_at: after.sessions?.created_at ?? "",
+    participant_number: after.participant_number,
+    stress_before: before.stress,
+    stress_after: after.stress,
+    fatigue_nerveuse_before: before.fatigue_nerveuse,
+    fatigue_nerveuse_after: after.fatigue_nerveuse,
+    fatigue_physique_before: before.fatigue_physique,
+    fatigue_physique_after: after.fatigue_physique,
+    lead_optin: after.lead_optin,
+    usage_likelihood: after.usage_likelihood ?? null,
+  }));
+}
+
 export async function getStats(filters: StatsFilters): Promise<StatsResponse> {
   const [selectionRows, globalRows] = await Promise.all([
     fetchRows(filters),
