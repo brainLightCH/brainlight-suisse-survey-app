@@ -71,17 +71,25 @@ export default function ParticipantPage() {
       }
 
       if (view === "loading" || view === "no_session") {
-        const stored = readStoredSubmission();
-        if (
-          stored &&
-          stored.sessionId === active.id &&
-          stored.phase === active.phase
-        ) {
-          setParticipantNumber(stored.participantNumber);
-          setLastSessionId(active.id);
-          setLastPhase(active.phase);
-          setView("done");
-          return;
+        // Only Showcase is a single participant on a single device — a
+        // refresh there should resume "Merci !" instead of a blank form.
+        // Event/Energy Days share one phone across many participants, so
+        // remembering "done" by session+phase alone would wrongly block
+        // the next person: the number grid (with already-answered numbers
+        // greyed out) is what prevents re-submitting a taken number there.
+        if (active.type === "showcase") {
+          const stored = readStoredSubmission();
+          if (
+            stored &&
+            stored.sessionId === active.id &&
+            stored.phase === active.phase
+          ) {
+            setParticipantNumber(stored.participantNumber);
+            setLastSessionId(active.id);
+            setLastPhase(active.phase);
+            setView("done");
+            return;
+          }
         }
 
         setView(active.type === "showcase" ? "form" : "pick_number");
