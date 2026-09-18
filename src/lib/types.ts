@@ -71,6 +71,7 @@ export interface StatsBucket {
   avg_before: RatingValues | null;
   avg_after: RatingValues | null;
   delta: RatingValues | null;
+  avg_usage_likelihood: number | null;
 }
 
 export interface StatsResponse {

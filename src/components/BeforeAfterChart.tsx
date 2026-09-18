@@ -6,6 +6,7 @@ interface BeforeAfterChartProps {
   avgBefore: RatingValues;
   avgAfter: RatingValues;
   delta: RatingValues;
+  avgUsageLikelihood?: number | null;
 }
 
 const METRICS: { key: keyof RatingValues; label: string }[] = [
@@ -14,25 +15,100 @@ const METRICS: { key: keyof RatingValues; label: string }[] = [
   { key: "fatigue_physique", label: "Fatigue physique" },
 ];
 
+const USAGE_LABEL = "Probabilité d'utilisation";
+
+function wrapLabel(label: string, maxCharsPerLine = 18): string[] {
+  const words = label.split(" ");
+  const lines: string[] = [];
+  let current = "";
+  for (const word of words) {
+    const next = current ? `${current} ${word}` : word;
+    if (next.length > maxCharsPerLine && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = next;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
 const CHART_HEIGHT = 180;
-const GROUP_WIDTH = 110;
+const GROUP_WIDTH = 130;
 const BAR_WIDTH = 34;
 const CHART_TOP_PAD = 24;
+const LABEL_LINE_HEIGHT = 12;
+
+function LabelText({ x, y, label }: { x: number; y: number; label: string }) {
+  const lines = wrapLabel(label);
+  return (
+    <text x={x} y={y} textAnchor="middle" fontSize={10} fill="#8B92B8">
+      {lines.map((line, i) => (
+        <tspan key={i} x={x} dy={i === 0 ? 0 : LABEL_LINE_HEIGHT}>
+          {line}
+        </tspan>
+      ))}
+    </text>
+  );
+}
+
+function ValueBar({
+  x,
+  width,
+  value,
+  baseY,
+}: {
+  x: number;
+  width: number;
+  value: number;
+  baseY: number;
+}) {
+  const h = (value / 10) * CHART_HEIGHT;
+  return (
+    <>
+      <rect
+        x={x}
+        y={baseY - h}
+        width={width}
+        height={h}
+        rx={4}
+        fill="url(#severity-gradient)"
+      />
+      <text
+        x={x + width / 2}
+        y={baseY - h - 6}
+        textAnchor="middle"
+        fontSize={11}
+        fill="#EDEFFA"
+        fontFamily="var(--font-jetbrains-mono), monospace"
+      >
+        {value.toFixed(1)}
+      </text>
+    </>
+  );
+}
 
 export default function BeforeAfterChart({
   avgBefore,
   avgAfter,
   delta,
+  avgUsageLikelihood,
 }: BeforeAfterChartProps) {
-  const chartWidth = METRICS.length * GROUP_WIDTH + 40;
+  const hasUsage = typeof avgUsageLikelihood === "number";
+  const groupCount = METRICS.length + (hasUsage ? 1 : 0);
+  const chartWidth = groupCount * GROUP_WIDTH + 40;
+  const baseY = CHART_TOP_PAD + CHART_HEIGHT;
+  const labelY = baseY + 18;
+  const svgHeight = baseY + 18 + LABEL_LINE_HEIGHT * 2 + 6;
 
   return (
     <div className="flex flex-col md:flex-row gap-6">
       <div className="flex-1 min-w-0 overflow-x-auto">
         <svg
-          viewBox={`0 0 ${chartWidth} ${CHART_HEIGHT + CHART_TOP_PAD + 30}`}
+          viewBox={`0 0 ${chartWidth} ${svgHeight}`}
           className="w-full"
-          style={{ minWidth: 280 }}
+          style={{ minWidth: 320 }}
           role="img"
           aria-label="Comparaison avant/après par indicateur"
         >
@@ -46,7 +122,7 @@ export default function BeforeAfterChart({
               id="severity-gradient"
               gradientUnits="userSpaceOnUse"
               x1={0}
-              y1={CHART_TOP_PAD + CHART_HEIGHT}
+              y1={baseY}
               x2={0}
               y2={CHART_TOP_PAD}
             >
@@ -84,68 +160,51 @@ export default function BeforeAfterChart({
 
           {METRICS.map((metric, i) => {
             const groupX = 40 + i * GROUP_WIDTH;
-            const beforeVal = avgBefore[metric.key];
-            const afterVal = avgAfter[metric.key];
-            const beforeH = (beforeVal / 10) * CHART_HEIGHT;
-            const afterH = (afterVal / 10) * CHART_HEIGHT;
-            const baseY = CHART_TOP_PAD + CHART_HEIGHT;
+            const groupCenter = groupX + (BAR_WIDTH * 2 + 8) / 2;
 
             return (
               <g key={metric.key}>
-                <rect
+                <ValueBar
                   x={groupX}
-                  y={baseY - beforeH}
                   width={BAR_WIDTH}
-                  height={beforeH}
-                  rx={4}
-                  fill="url(#severity-gradient)"
+                  value={avgBefore[metric.key]}
+                  baseY={baseY}
                 />
-                <text
-                  x={groupX + BAR_WIDTH / 2}
-                  y={baseY - beforeH - 6}
-                  textAnchor="middle"
-                  fontSize={11}
-                  fill="#EDEFFA"
-                  fontFamily="var(--font-jetbrains-mono), monospace"
-                >
-                  {beforeVal.toFixed(1)}
-                </text>
-
-                <rect
+                <ValueBar
                   x={groupX + BAR_WIDTH + 8}
-                  y={baseY - afterH}
                   width={BAR_WIDTH}
-                  height={afterH}
-                  rx={4}
-                  fill="url(#severity-gradient)"
+                  value={avgAfter[metric.key]}
+                  baseY={baseY}
                 />
-                <text
-                  x={groupX + BAR_WIDTH + 8 + BAR_WIDTH / 2}
-                  y={baseY - afterH - 6}
-                  textAnchor="middle"
-                  fontSize={11}
-                  fill="#EDEFFA"
-                  fontFamily="var(--font-jetbrains-mono), monospace"
-                >
-                  {afterVal.toFixed(1)}
-                </text>
-
-                <text
-                  x={groupX + BAR_WIDTH + 4}
-                  y={baseY + 16}
-                  textAnchor="middle"
-                  fontSize={10}
-                  fill="#8B92B8"
-                >
-                  <tspan x={groupX + BAR_WIDTH + 4} dy={0}>
-                    {metric.label.length > 16
-                      ? metric.label.slice(0, 14) + "…"
-                      : metric.label}
-                  </tspan>
-                </text>
+                <LabelText x={groupCenter} y={labelY} label={metric.label} />
               </g>
             );
           })}
+
+          {hasUsage && (
+            <g>
+              {(() => {
+                const groupX = 40 + METRICS.length * GROUP_WIDTH;
+                const barX = groupX + (BAR_WIDTH * 2 + 8 - BAR_WIDTH) / 2;
+                const groupCenter = groupX + (BAR_WIDTH * 2 + 8) / 2;
+                return (
+                  <>
+                    <ValueBar
+                      x={barX}
+                      width={BAR_WIDTH}
+                      value={avgUsageLikelihood as number}
+                      baseY={baseY}
+                    />
+                    <LabelText
+                      x={groupCenter}
+                      y={labelY}
+                      label={USAGE_LABEL}
+                    />
+                  </>
+                );
+              })()}
+            </g>
+          )}
         </svg>
 
         <div className="flex items-center gap-3 mt-2 px-2">
@@ -183,6 +242,14 @@ export default function BeforeAfterChart({
             </p>
           </div>
         ))}
+        {hasUsage && (
+          <div>
+            <p className="text-xs text-text-muted">{USAGE_LABEL}</p>
+            <p className="font-mono text-2xl font-semibold text-accent-light">
+              {(avgUsageLikelihood as number).toFixed(1)}/10
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

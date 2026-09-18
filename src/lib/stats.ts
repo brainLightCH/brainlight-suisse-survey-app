@@ -9,6 +9,7 @@ interface RatingRow {
   fatigue_nerveuse: number;
   fatigue_physique: number;
   lead_optin: boolean;
+  usage_likelihood?: number | null;
 }
 
 interface JoinedRow extends RatingRow {
@@ -19,7 +20,7 @@ async function fetchRows(filters: StatsFilters): Promise<JoinedRow[]> {
   let query = supabaseAdmin
     .from("responses")
     .select(
-      "session_id, phase, participant_number, stress, fatigue_nerveuse, fatigue_physique, lead_optin, sessions!inner(sector, company_name, type, created_at)"
+      "session_id, phase, participant_number, stress, fatigue_nerveuse, fatigue_physique, lead_optin, usage_likelihood, sessions!inner(sector, company_name, type, created_at)"
     );
 
   if (filters.type) query = query.eq("sessions.type", filters.type);
@@ -57,6 +58,11 @@ export function computeBucket(rows: RatingRow[]): StatsBucket {
   );
 
   const leadsCount = rows.filter((r) => r.phase === "after" && r.lead_optin).length;
+
+  const usageLikelihoodValues = rows
+    .filter((r) => r.phase === "after" && typeof r.usage_likelihood === "number")
+    .map((r) => r.usage_likelihood as number);
+  const avgUsageLikelihood = average(usageLikelihoodValues);
 
   const avgBefore: RatingValues | null = matched.length
     ? {
@@ -103,6 +109,7 @@ export function computeBucket(rows: RatingRow[]): StatsBucket {
     avg_before: avgBefore,
     avg_after: avgAfter,
     delta,
+    avg_usage_likelihood: avgUsageLikelihood,
   };
 }
 
@@ -130,7 +137,7 @@ export async function getLatestEnergyDaysSummary(): Promise<LatestEnergyDaysSumm
   const { data: responses, error: responsesError } = await supabaseAdmin
     .from("responses")
     .select(
-      "session_id, phase, participant_number, stress, fatigue_nerveuse, fatigue_physique, lead_optin"
+      "session_id, phase, participant_number, stress, fatigue_nerveuse, fatigue_physique, lead_optin, usage_likelihood"
     )
     .eq("session_id", session.id);
 

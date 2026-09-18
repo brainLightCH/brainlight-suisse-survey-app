@@ -98,6 +98,7 @@ export default function CoachStatsPage() {
                 avgBefore={latestEnergyDays.bucket.avg_before}
                 avgAfter={latestEnergyDays.bucket.avg_after}
                 delta={latestEnergyDays.bucket.delta}
+                avgUsageLikelihood={latestEnergyDays.bucket.avg_usage_likelihood}
               />
             ) : (
               <p className="text-text-muted text-sm">
@@ -281,6 +282,17 @@ function BucketCard({
         <p className="text-text-muted text-sm">
           Pas encore assez de données avant/après.
         </p>
+      )}
+
+      {bucket.avg_usage_likelihood !== null && (
+        <div className="flex justify-between items-baseline text-sm border-t border-panel-raised pt-3">
+          <span className="text-text-muted">
+            Probabilité d&apos;utilisation
+          </span>
+          <span className="font-mono text-accent-light">
+            {bucket.avg_usage_likelihood.toFixed(1)}/10
+          </span>
+        </div>
       )}
 
       <p className="text-sm text-text-muted border-t border-panel-raised pt-3">
