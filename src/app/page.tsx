@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Footer from "@/components/Footer";
 import NumberGrid from "@/components/NumberGrid";
 import ParticipantForm from "@/components/ParticipantForm";
 import { SESSION_TYPE_LABELS } from "@/lib/constants";
@@ -159,7 +160,7 @@ export default function ParticipantPage() {
 
   if (sessionChanged) {
     return (
-      <Centered>
+      <Centered lang={lang}>
         <p className="text-lg text-center mb-6">{t.sessionChanged}</p>
         <button
           onClick={restart}
@@ -173,7 +174,7 @@ export default function ParticipantPage() {
 
   if (view === "loading") {
     return (
-      <Centered>
+      <Centered lang={lang}>
         <p className="text-text-muted">{t.loading}</p>
       </Centered>
     );
@@ -181,7 +182,7 @@ export default function ParticipantPage() {
 
   if (view === "no_session" || !session) {
     return (
-      <Centered>
+      <Centered lang={lang}>
         <p className="text-lg text-center">{t.noSession}</p>
         <p className="text-text-muted text-sm text-center mt-2">
           {t.noSessionSub}
@@ -200,7 +201,7 @@ export default function ParticipantPage() {
     );
 
     return (
-      <Centered>
+      <Centered lang={lang}>
         <h1 className="text-xl font-semibold mb-1 text-center">
           {SESSION_TYPE_LABELS[session.type]}
         </h1>
@@ -223,7 +224,7 @@ export default function ParticipantPage() {
 
   if (view === "form" && participantNumber !== null) {
     return (
-      <Centered>
+      <Centered lang={lang}>
         <span className="inline-flex items-center gap-2 rounded-full bg-panel-raised text-accent-light text-xs font-mono uppercase tracking-wide px-3 py-1 mb-4">
           {session.type !== "showcase" && (
             <>
@@ -261,7 +262,7 @@ export default function ParticipantPage() {
 
   if (view === "done") {
     return (
-      <Centered>
+      <Centered lang={lang}>
         <p className="text-2xl mb-2">✓</p>
         <p className="text-lg text-center">{t.thankYou}</p>
         <p className="text-text-muted text-sm text-center mt-2">
@@ -279,11 +280,20 @@ export default function ParticipantPage() {
   return null;
 }
 
-function Centered({ children }: { children: React.ReactNode }) {
+function Centered({
+  children,
+  lang,
+}: {
+  children: React.ReactNode;
+  lang?: Lang;
+}) {
   return (
-    <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-      {children}
-    </main>
+    <>
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+        {children}
+      </main>
+      <Footer lang={lang} />
+    </>
   );
 }
 

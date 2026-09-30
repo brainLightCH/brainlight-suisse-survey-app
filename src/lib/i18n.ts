@@ -40,6 +40,7 @@ export const translations = {
     submit: "Valider",
     submitting: "Envoi…",
     errorGeneric: "Une erreur est survenue. Merci de réessayer.",
+    footerDisclaimer: "Outil développé par brainLight Suisse",
   },
   de: {
     selectLanguageLine1: "Sélectionnez votre langue",
@@ -79,6 +80,7 @@ export const translations = {
     submit: "Bestätigen",
     submitting: "Wird gesendet…",
     errorGeneric: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+    footerDisclaimer: "Entwickelt von brainLight Suisse",
   },
 } as const;
 
