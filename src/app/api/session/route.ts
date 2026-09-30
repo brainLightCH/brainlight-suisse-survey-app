@@ -30,10 +30,14 @@ export async function POST(request: Request) {
     }
   }
 
+  // station = 0 is the coach-driven "single active session" slot — expo
+  // stations (1-4) have their own independent active sessions and must
+  // never block or be confused with this one.
   const { data: existing, error: existingError } = await supabaseAdmin
     .from("sessions")
     .select("id")
     .eq("is_active", true)
+    .eq("station", 0)
     .maybeSingle();
 
   if (existingError) {
@@ -56,6 +60,7 @@ export async function POST(request: Request) {
       phase: "before",
       active_numbers,
       is_active: true,
+      station: 0,
     })
     .select()
     .single();

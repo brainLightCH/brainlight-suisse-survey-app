@@ -1,14 +1,22 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { parseStation } from "@/lib/expo";
 
-export async function GET() {
-  // station = 0 is the coach-driven slot — never surface an expo station's
-  // (1-4) session here, those are independent (see /api/expo/[station]).
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ station: string }> }
+) {
+  const { station: stationParam } = await params;
+  const station = parseStation(stationParam);
+  if (!station) {
+    return NextResponse.json({ error: "invalid_station" }, { status: 400 });
+  }
+
   const { data, error } = await supabaseAdmin
     .from("sessions")
     .select("*")
     .eq("is_active", true)
-    .eq("station", 0)
+    .eq("station", station)
     .maybeSingle();
 
   if (error) {

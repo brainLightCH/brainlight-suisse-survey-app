@@ -57,7 +57,14 @@ export function computeBucket(rows: RatingRow[]): StatsBucket {
     (e): e is { before: RatingRow; after: RatingRow } => Boolean(e.before && e.after)
   );
 
-  const leadsCount = rows.filter((r) => r.phase === "after" && r.lead_optin).length;
+  // Lead capture normally happens on the "after" row, but Expo captures it
+  // upfront on "before" instead — count distinct participants with
+  // lead_optin on either phase rather than assuming one fixed phase.
+  const leadsCount = new Set(
+    rows
+      .filter((r) => r.lead_optin)
+      .map((r) => `${r.session_id}:${r.participant_number}`)
+  ).size;
 
   const usageLikelihoodValues = rows
     .filter((r) => r.phase === "after" && typeof r.usage_likelihood === "number")
@@ -168,13 +175,14 @@ export interface ExportRow {
   fatigue_physique_after: number;
   lead_optin: boolean;
   usage_likelihood: number | null;
+  lang: string | null;
 }
 
 export async function getExportRows(filters: StatsFilters): Promise<ExportRow[]> {
   let query = supabaseAdmin
     .from("responses")
     .select(
-      "session_id, phase, participant_number, stress, fatigue_nerveuse, fatigue_physique, lead_optin, usage_likelihood, sessions!inner(event_name, type, sector, company_name, created_at)"
+      "session_id, phase, participant_number, stress, fatigue_nerveuse, fatigue_physique, lead_optin, usage_likelihood, lang, sessions!inner(event_name, type, sector, company_name, created_at)"
     );
 
   if (filters.type) query = query.eq("sessions.type", filters.type);
@@ -188,6 +196,7 @@ export async function getExportRows(filters: StatsFilters): Promise<ExportRow[]>
 
   interface ExportJoinedRow extends RatingRow {
     usage_likelihood: number | null;
+    lang: string | null;
     sessions: {
       event_name: string;
       type: string;
@@ -228,8 +237,9 @@ export async function getExportRows(filters: StatsFilters): Promise<ExportRow[]>
     fatigue_nerveuse_after: after.fatigue_nerveuse,
     fatigue_physique_before: before.fatigue_physique,
     fatigue_physique_after: after.fatigue_physique,
-    lead_optin: after.lead_optin,
+    lead_optin: after.lead_optin || before.lead_optin,
     usage_likelihood: after.usage_likelihood ?? null,
+    lang: after.lang ?? before.lang ?? null,
   }));
 }
 

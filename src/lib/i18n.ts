@@ -41,6 +41,21 @@ export const translations = {
     submitting: "Envoi…",
     errorGeneric: "Une erreur est survenue. Merci de réessayer.",
     footerDisclaimer: "Outil développé par brainLight Suisse",
+    address: "Adresse complète (rue, NPA, ville, pays)",
+    expoConsent:
+      "J'accepte que brainLight Suisse utilise mes coordonnées pour me recontacter suite à ce salon.",
+    expoIntro: "Merci de nous laisser vos coordonnées avant de commencer.",
+    next: "Suivant",
+    expoWaitingTitle: "Merci !",
+    expoWaitingMessage:
+      "Dès que le fauteuil est disponible, merci de prendre place. Profitez de votre séance !",
+    expoFinishButton: "J'ai terminé la séance",
+    expoAfterTitle: "Comment vous sentez-vous après votre séance ?",
+    expoThankYouFinal: "Merci d'avoir participé !",
+    resetLink: "Réinitialiser ce fauteuil",
+    resetConfirm: "Réinitialiser ce fauteuil et effacer les données en cours ?",
+    resetConfirmYes: "Oui, réinitialiser",
+    resetConfirmCancel: "Annuler",
   },
   de: {
     selectLanguageLine1: "Sélectionnez votre langue",
@@ -81,6 +96,21 @@ export const translations = {
     submitting: "Wird gesendet…",
     errorGeneric: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
     footerDisclaimer: "Entwickelt von brainLight Suisse",
+    address: "Vollständige Adresse (Strasse, PLZ, Ort, Land)",
+    expoConsent:
+      "Ich bin damit einverstanden, dass brainLight Suisse meine Kontaktdaten nutzt, um mich nach dieser Messe zu kontaktieren.",
+    expoIntro: "Bitte hinterlassen Sie uns Ihre Kontaktdaten, bevor Sie beginnen.",
+    next: "Weiter",
+    expoWaitingTitle: "Danke!",
+    expoWaitingMessage:
+      "Sobald der Sessel frei ist, nehmen Sie bitte Platz. Geniessen Sie Ihre Sitzung!",
+    expoFinishButton: "Ich habe die Sitzung beendet",
+    expoAfterTitle: "Wie fühlen Sie sich nach Ihrer Sitzung?",
+    expoThankYouFinal: "Danke für Ihre Teilnahme!",
+    resetLink: "Diesen Sessel zurücksetzen",
+    resetConfirm: "Diesen Sessel zurücksetzen und laufende Daten löschen?",
+    resetConfirmYes: "Ja, zurücksetzen",
+    resetConfirmCancel: "Abbrechen",
   },
 } as const;
 

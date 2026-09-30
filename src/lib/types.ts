@@ -1,4 +1,4 @@
-export type SessionType = "showcase" | "event" | "energy_days";
+export type SessionType = "showcase" | "event" | "energy_days" | "expo";
 export type Phase = "before" | "after";
 
 export interface Session {
@@ -11,6 +11,7 @@ export interface Session {
   active_numbers: number[];
   is_active: boolean;
   notes: string | null;
+  station: number;
   created_at: string;
   closed_at: string | null;
 }
@@ -30,6 +31,8 @@ export interface ResponseRow {
   email: string | null;
   telephone: string | null;
   entreprise: string | null;
+  adresse: string | null;
+  lang: string | null;
   created_at: string;
 }
 

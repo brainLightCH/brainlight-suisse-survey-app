@@ -16,6 +16,7 @@ const COLUMNS: [string, string][] = [
   ["fatigue_physique_after", "Fatigue physique après"],
   ["lead_optin", "Lead"],
   ["usage_likelihood", "Probabilité d'utilisation"],
+  ["lang", "Langue"],
 ];
 
 function csvCell(value: unknown): string {

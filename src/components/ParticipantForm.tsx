@@ -53,6 +53,7 @@ export default function ParticipantForm({
           fatigue_nerveuse: fatigueNerveuse,
           fatigue_physique: fatiguePhysique,
           lead_optin: phase === "after" ? leadOptin : false,
+          lang,
           ...(showUsageQuestion ? { usage_likelihood: usageLikelihood } : {}),
           ...(phase === "after" && leadOptin
             ? { prenom, nom, email, telephone, entreprise }

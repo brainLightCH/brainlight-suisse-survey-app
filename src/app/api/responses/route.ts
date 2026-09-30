@@ -33,6 +33,7 @@ export async function POST(request: Request) {
     fatigue_physique,
     lead_optin,
     usage_likelihood,
+    lang,
     prenom,
     nom,
     email,
@@ -88,6 +89,7 @@ export async function POST(request: Request) {
         // Omit entirely rather than sending null when absent, so a session
         // type/phase that never uses this field doesn't touch the column.
         ...(usage_likelihood !== undefined ? { usage_likelihood } : {}),
+        ...(lang !== undefined ? { lang } : {}),
         prenom: isLead ? prenom ?? null : null,
         nom: isLead ? nom ?? null : null,
         email: isLead ? email ?? null : null,

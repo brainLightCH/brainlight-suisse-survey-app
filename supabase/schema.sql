@@ -7,7 +7,7 @@
 -- ============================================================
 create table if not exists sessions (
   id uuid primary key default gen_random_uuid(),
-  type text not null check (type in ('showcase', 'event', 'energy_days')),
+  type text not null check (type in ('showcase', 'event', 'energy_days', 'expo')),
   event_name text not null,
   company_name text,
   sector text,
@@ -15,16 +15,30 @@ create table if not exists sessions (
   active_numbers jsonb not null default '[]'::jsonb,
   is_active boolean not null default true,
   notes text,
+  station int not null default 0,
   created_at timestamptz not null default now(),
   closed_at timestamptz
 );
 
--- Migration : ajoute la colonne aux bases déjà créées avant son introduction.
+-- Migration : ajoute les colonnes aux bases déjà créées avant leur introduction.
 alter table sessions add column if not exists notes text;
+alter table sessions add column if not exists station int not null default 0;
 
--- Une seule session active à la fois.
-create unique index if not exists sessions_single_active_idx
-  on sessions ((is_active))
+-- Migration : élargit la contrainte de type existante pour autoriser 'expo'
+-- (sans effet si la table vient d'être créée avec la liste déjà à jour).
+alter table sessions drop constraint if exists sessions_type_check;
+alter table sessions add constraint sessions_type_check
+  check (type in ('showcase', 'event', 'energy_days', 'expo'));
+
+-- Une seule session active à la fois PAR STATION. station = 0 est le mode
+-- coach normal (Showcase / Event / Energy Days) : une seule séance active
+-- au total, comme avant. station 1 à 4 sont les fauteuils expo (salons,
+-- voir /expo/[station]) : chacun a sa propre séance active, indépendante
+-- des 3 autres fauteuils et du mode coach — jusqu'à 5 séances actives en
+-- parallèle au total (1 coach + 4 fauteuils expo).
+drop index if exists sessions_single_active_idx;
+create unique index if not exists sessions_single_active_per_station_idx
+  on sessions (station)
   where is_active;
 
 -- ============================================================
@@ -45,14 +59,20 @@ create table if not exists responses (
   email text,
   telephone text,
   entreprise text,
+  adresse text,
+  lang text,
   created_at timestamptz not null default now(),
   unique (session_id, phase, participant_number)
 );
 
--- Migration : ajoute la colonne aux bases déjà créées avant son introduction.
+-- Migration : ajoute les colonnes aux bases déjà créées avant leur introduction.
 -- Energy Days uniquement, phase "après" : probabilité (0-10) que la personne
 -- utiliserait ce dispositif si présent dans son entreprise.
 alter table responses add column if not exists usage_likelihood int;
+-- Adresse complète (avec pays) : Expo uniquement, phase "avant".
+alter table responses add column if not exists adresse text;
+-- Langue choisie par le participant ('fr' ou 'de') : toutes les séances.
+alter table responses add column if not exists lang text;
 
 create index if not exists responses_session_idx on responses (session_id);
 

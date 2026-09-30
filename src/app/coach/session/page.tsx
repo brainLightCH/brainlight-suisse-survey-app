@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Button from "@/components/Button";
 import {
+  CREATABLE_SESSION_TYPES,
   SECTORS,
   SESSION_TYPE_DESCRIPTIONS,
   SESSION_TYPE_LABELS,
@@ -92,7 +93,7 @@ function CreateSessionForm({
         </h1>
 
         <div className="flex flex-col gap-3">
-          {(Object.keys(SESSION_TYPE_LABELS) as SessionType[]).map((t) => (
+          {CREATABLE_SESSION_TYPES.map((t) => (
             <button
               key={t}
               onClick={() => setType(t)}
