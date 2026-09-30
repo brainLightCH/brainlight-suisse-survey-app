@@ -380,7 +380,12 @@ export default function ExpoStationPage() {
     content = (
       <>
         <p className="text-2xl mb-2">✓</p>
-        <p className="text-lg text-center">{t.expoThankYouFinal}</p>
+        <p className="text-lg text-center mb-6">{t.expoThankYouFinal}</p>
+        <p className="text-text-muted text-sm text-center">
+          {t.expoSignOffLine1}
+          <br />
+          {t.expoSignOffLine2}
+        </p>
       </>
     );
   }
