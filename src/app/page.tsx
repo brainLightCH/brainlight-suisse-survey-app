@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import NumberGrid from "@/components/NumberGrid";
 import ParticipantForm from "@/components/ParticipantForm";
 import { SESSION_TYPE_LABELS } from "@/lib/constants";
+import { translations, type Lang } from "@/lib/i18n";
 import type { Session } from "@/lib/types";
 
 type ViewState = "loading" | "no_session" | "pick_number" | "form" | "done";
@@ -38,6 +39,7 @@ function writeStoredSubmission(submission: StoredSubmission) {
 }
 
 export default function ParticipantPage() {
+  const [lang, setLang] = useState<Lang | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [view, setView] = useState<ViewState>("loading");
   const [participantNumber, setParticipantNumber] = useState<number | null>(
@@ -149,17 +151,21 @@ export default function ParticipantPage() {
     setView("loading");
   }
 
+  if (!lang) {
+    return <LanguageSelect onSelect={setLang} />;
+  }
+
+  const t = translations[lang];
+
   if (sessionChanged) {
     return (
       <Centered>
-        <p className="text-lg text-center mb-6">
-          Le questionnaire a changé. Merci de recommencer.
-        </p>
+        <p className="text-lg text-center mb-6">{t.sessionChanged}</p>
         <button
           onClick={restart}
           className="rounded-2xl bg-accent-light text-[#10142a] px-6 py-3 font-semibold"
         >
-          Recommencer
+          {t.restart}
         </button>
       </Centered>
     );
@@ -168,7 +174,7 @@ export default function ParticipantPage() {
   if (view === "loading") {
     return (
       <Centered>
-        <p className="text-text-muted">Chargement…</p>
+        <p className="text-text-muted">{t.loading}</p>
       </Centered>
     );
   }
@@ -176,11 +182,9 @@ export default function ParticipantPage() {
   if (view === "no_session" || !session) {
     return (
       <Centered>
-        <p className="text-lg text-center">
-          Aucune séance en cours pour le moment.
-        </p>
+        <p className="text-lg text-center">{t.noSession}</p>
         <p className="text-text-muted text-sm text-center mt-2">
-          Merci de patienter, votre coach brainLight va bientôt démarrer.
+          {t.noSessionSub}
         </p>
       </Centered>
     );
@@ -201,7 +205,7 @@ export default function ParticipantPage() {
           {SESSION_TYPE_LABELS[session.type]}
         </h1>
         <p className="text-text-muted text-sm mb-6 text-center">
-          Sélectionnez votre numéro
+          {t.selectNumber}
         </p>
         <NumberGrid
           numbers={session.active_numbers}
@@ -223,25 +227,25 @@ export default function ParticipantPage() {
         <span className="inline-flex items-center gap-2 rounded-full bg-panel-raised text-accent-light text-xs font-mono uppercase tracking-wide px-3 py-1 mb-4">
           {session.type !== "showcase" && (
             <>
-              Participant n°{participantNumber}
+              {t.participantNumber}
+              {participantNumber}
               <span className="text-text-muted">·</span>
             </>
           )}
-          {session.phase === "before" ? "Avant séance" : "Après séance"}
+          {session.phase === "before" ? t.beforeSession : t.afterSession}
         </span>
         <h1 className="text-2xl font-semibold mb-2 text-center max-w-md">
-          {session.phase === "before"
-            ? "Comment vous sentez-vous maintenant ?"
-            : "Comment vous sentez-vous à présent ?"}
+          {session.phase === "before" ? t.beforeTitle : t.afterTitle}
         </h1>
         <p className="text-text-muted text-sm mb-6 text-center">
-          Déplacez les curseurs. 1 = très faible, 10 = très élevé.
+          {t.scaleHint}
         </p>
         <ParticipantForm
           sessionId={session.id}
           sessionType={session.type}
           phase={session.phase}
           participantNumber={participantNumber}
+          lang={lang}
           onSubmitted={() => {
             writeStoredSubmission({
               sessionId: session.id,
@@ -259,14 +263,13 @@ export default function ParticipantPage() {
     return (
       <Centered>
         <p className="text-2xl mb-2">✓</p>
-        <p className="text-lg text-center">Merci !</p>
+        <p className="text-lg text-center">{t.thankYou}</p>
         <p className="text-text-muted text-sm text-center mt-2">
-          Vos réponses ont bien été enregistrées.
+          {t.savedMessage}
         </p>
         {session.phase === "before" && (
           <p className="text-text-muted text-sm text-center mt-2">
-            Vous pouvez maintenant fermer ce dispositif et profiter de votre
-            séance !
+            {t.closeDeviceMessage}
           </p>
         )}
       </Centered>
@@ -281,5 +284,53 @@ function Centered({ children }: { children: React.ReactNode }) {
     <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">
       {children}
     </main>
+  );
+}
+
+function LanguageSelect({ onSelect }: { onSelect: (lang: Lang) => void }) {
+  return (
+    <Centered>
+      <p className="text-lg text-center mb-8 leading-relaxed">
+        Sélectionnez votre langue
+        <br />
+        Wählen Sie Ihre Sprache
+      </p>
+      <div className="flex gap-4 w-full max-w-xs">
+        <button
+          onClick={() => onSelect("fr")}
+          className="flex-1 flex flex-col items-center gap-2 rounded-2xl bg-panel-raised px-4 py-6 hover:brightness-110 transition"
+        >
+          <FlagFr className="w-12 h-8 rounded" />
+          <span className="text-sm font-medium">Français</span>
+        </button>
+        <button
+          onClick={() => onSelect("de")}
+          className="flex-1 flex flex-col items-center gap-2 rounded-2xl bg-panel-raised px-4 py-6 hover:brightness-110 transition"
+        >
+          <FlagDe className="w-12 h-8 rounded" />
+          <span className="text-sm font-medium">Deutsch</span>
+        </button>
+      </div>
+    </Centered>
+  );
+}
+
+function FlagFr({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 3 2" className={className} aria-hidden="true">
+      <rect width="1" height="2" x="0" fill="#0055A4" />
+      <rect width="1" height="2" x="1" fill="#FFFFFF" />
+      <rect width="1" height="2" x="2" fill="#EF4135" />
+    </svg>
+  );
+}
+
+function FlagDe({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 3 2" className={className} aria-hidden="true">
+      <rect width="3" height="0.667" y="0" fill="#000000" />
+      <rect width="3" height="0.667" y="0.667" fill="#DD0000" />
+      <rect width="3" height="0.667" y="1.333" fill="#FFCE00" />
+    </svg>
   );
 }

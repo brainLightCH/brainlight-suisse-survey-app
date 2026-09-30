@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Slider from "./Slider";
 import Button from "./Button";
+import { translations, type Lang } from "@/lib/i18n";
 import type { Phase, SessionType } from "@/lib/types";
 
 interface ParticipantFormProps {
@@ -10,6 +11,7 @@ interface ParticipantFormProps {
   sessionType: SessionType;
   phase: Phase;
   participantNumber: number;
+  lang: Lang;
   onSubmitted: () => void;
 }
 
@@ -18,8 +20,10 @@ export default function ParticipantForm({
   sessionType,
   phase,
   participantNumber,
+  lang,
   onSubmitted,
 }: ParticipantFormProps) {
+  const t = translations[lang];
   const [stress, setStress] = useState(5);
   const [fatigueNerveuse, setFatigueNerveuse] = useState(5);
   const [fatiguePhysique, setFatiguePhysique] = useState(5);
@@ -56,13 +60,13 @@ export default function ParticipantForm({
         }),
       });
       if (res.status === 409) {
-        setError("Le questionnaire a changé. Merci de recommencer.");
+        setError(t.sessionChanged);
         return;
       }
       if (!res.ok) throw new Error("submit_failed");
       onSubmitted();
     } catch {
-      setError("Une erreur est survenue. Merci de réessayer.");
+      setError(t.errorGeneric);
     } finally {
       setSubmitting(false);
     }
@@ -71,29 +75,39 @@ export default function ParticipantForm({
   return (
     <div className="w-full max-w-md flex flex-col gap-8">
       <div className="flex flex-col gap-6 bg-panel rounded-2xl p-5">
-        <Slider label="Niveau de stress" value={stress} onChange={setStress} />
         <Slider
-          label="Fatigue nerveuse et émotionnelle"
-          value={fatigueNerveuse}
-          onChange={setFatigueNerveuse}
+          label={t.stress}
+          value={stress}
+          onChange={setStress}
+          lowLabel={t.scaleLow}
+          highLabel={t.scaleHigh}
         />
         <Slider
-          label="Fatigue physique"
+          label={t.fatigueNerveuse}
+          value={fatigueNerveuse}
+          onChange={setFatigueNerveuse}
+          lowLabel={t.scaleLow}
+          highLabel={t.scaleHigh}
+        />
+        <Slider
+          label={t.fatiguePhysique}
           value={fatiguePhysique}
           onChange={setFatiguePhysique}
+          lowLabel={t.scaleLow}
+          highLabel={t.scaleHigh}
         />
       </div>
 
       {showUsageQuestion && (
         <div className="bg-panel rounded-2xl p-5">
           <Slider
-            label="Si un tel dispositif était présent dans votre entreprise, quelle est la probabilité que vous l'utiliseriez ?"
+            label={t.usageQuestion}
             value={usageLikelihood}
             onChange={setUsageLikelihood}
             min={0}
             max={10}
-            lowLabel="Pas du tout"
-            highLabel="Certainement"
+            lowLabel={t.usageLow}
+            highLabel={t.usageHigh}
           />
         </div>
       )}
@@ -107,43 +121,39 @@ export default function ParticipantForm({
               onChange={(e) => setLeadOptin(e.target.checked)}
               className="mt-1 w-5 h-5 accent-[#8fd9ff]"
             />
-            <span className="text-sm text-text-muted">
-              Je souhaite être recontacté·e par brainLight Suisse et
-              j&apos;accepte que mes coordonnées soient utilisées à cette
-              fin uniquement.
-            </span>
+            <span className="text-sm text-text-muted">{t.leadOptin}</span>
           </label>
 
           {leadOptin && (
             <div className="flex flex-col gap-3">
               <input
-                placeholder="Prénom"
+                placeholder={t.firstName}
                 value={prenom}
                 onChange={(e) => setPrenom(e.target.value)}
                 className="rounded-xl bg-panel-raised px-4 py-3 text-text placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-light"
               />
               <input
-                placeholder="Nom"
+                placeholder={t.lastName}
                 value={nom}
                 onChange={(e) => setNom(e.target.value)}
                 className="rounded-xl bg-panel-raised px-4 py-3 text-text placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-light"
               />
               <input
-                placeholder="Email"
+                placeholder={t.email}
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="rounded-xl bg-panel-raised px-4 py-3 text-text placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-light"
               />
               <input
-                placeholder="Téléphone"
+                placeholder={t.phone}
                 type="tel"
                 value={telephone}
                 onChange={(e) => setTelephone(e.target.value)}
                 className="rounded-xl bg-panel-raised px-4 py-3 text-text placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-light"
               />
               <input
-                placeholder="Entreprise (optionnel)"
+                placeholder={t.company}
                 value={entreprise}
                 onChange={(e) => setEntreprise(e.target.value)}
                 className="rounded-xl bg-panel-raised px-4 py-3 text-text placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-light"
@@ -156,7 +166,7 @@ export default function ParticipantForm({
       {error && <p className="text-danger text-sm">{error}</p>}
 
       <Button onClick={handleSubmit} disabled={submitting}>
-        {submitting ? "Envoi…" : "Valider"}
+        {submitting ? t.submitting : t.submit}
       </Button>
     </div>
   );
