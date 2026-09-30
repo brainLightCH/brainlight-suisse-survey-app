@@ -38,6 +38,7 @@ export async function POST(
     !nom?.trim() ||
     !email?.trim() ||
     !telephone?.trim() ||
+    !entreprise?.trim() ||
     !adresse?.trim() ||
     !["fr", "de"].includes(lang)
   ) {

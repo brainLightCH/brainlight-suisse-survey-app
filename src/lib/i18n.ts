@@ -42,6 +42,7 @@ export const translations = {
     errorGeneric: "Une erreur est survenue. Merci de réessayer.",
     footerDisclaimer: "Outil développé par brainLight Suisse",
     address: "Adresse complète (rue, NPA, ville, pays)",
+    companyExpo: "Entreprise",
     expoConsent:
       "J'accepte que brainLight Suisse utilise mes coordonnées pour me recontacter suite à ce salon.",
     expoIntro: "Merci de nous laisser vos coordonnées avant de commencer.",
@@ -97,6 +98,7 @@ export const translations = {
     errorGeneric: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
     footerDisclaimer: "Entwickelt von brainLight Suisse",
     address: "Vollständige Adresse (Strasse, PLZ, Ort, Land)",
+    companyExpo: "Unternehmen",
     expoConsent:
       "Ich bin damit einverstanden, dass brainLight Suisse meine Kontaktdaten nutzt, um mich nach dieser Messe zu kontaktieren.",
     expoIntro: "Bitte hinterlassen Sie uns Ihre Kontaktdaten, bevor Sie beginnen.",

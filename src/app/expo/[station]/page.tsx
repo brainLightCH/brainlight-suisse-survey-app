@@ -215,6 +215,7 @@ export default function ExpoStationPage() {
         nom.trim() &&
         email.trim() &&
         telephone.trim() &&
+        entreprise.trim() &&
         adresse.trim() &&
         consent
     );
@@ -250,7 +251,7 @@ export default function ExpoStationPage() {
             className="rounded-xl bg-panel-raised px-4 py-3 text-text placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-light"
           />
           <input
-            placeholder={t.company}
+            placeholder={t.companyExpo}
             value={entreprise}
             onChange={(e) => setEntreprise(e.target.value)}
             className="rounded-xl bg-panel-raised px-4 py-3 text-text placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent-light"
