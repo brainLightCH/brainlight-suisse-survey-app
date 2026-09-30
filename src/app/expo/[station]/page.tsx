@@ -388,6 +388,7 @@ export default function ExpoStationPage() {
   return (
     <ExpoShell
       lang={lang}
+      showResetLink={step !== "done"}
       showResetConfirm={showResetConfirm}
       onRequestReset={() => setShowResetConfirm(true)}
       onCancelReset={() => setShowResetConfirm(false)}
@@ -401,6 +402,7 @@ export default function ExpoStationPage() {
 function ExpoShell({
   children,
   lang,
+  showResetLink,
   showResetConfirm,
   onRequestReset,
   onCancelReset,
@@ -408,6 +410,7 @@ function ExpoShell({
 }: {
   children: React.ReactNode;
   lang: Lang | null;
+  showResetLink: boolean;
   showResetConfirm: boolean;
   onRequestReset: () => void;
   onCancelReset: () => void;
@@ -419,14 +422,16 @@ function ExpoShell({
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">
         {children}
       </main>
-      <div className="text-center pb-1">
-        <button
-          onClick={onRequestReset}
-          className="text-[10px] text-text-muted/40 hover:text-text-muted underline"
-        >
-          {t.resetLink}
-        </button>
-      </div>
+      {showResetLink && (
+        <div className="text-center pb-1">
+          <button
+            onClick={onRequestReset}
+            className="text-[10px] text-text-muted/40 hover:text-text-muted underline"
+          >
+            {t.resetLink}
+          </button>
+        </div>
+      )}
       <Footer lang={lang ?? undefined} />
       {showResetConfirm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center px-6 z-50">
