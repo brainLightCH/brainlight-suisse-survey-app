@@ -112,7 +112,7 @@ export const translations = {
     expoFinishButton: "Ich habe die Sitzung beendet",
     expoAfterTitle: "Wie fühlen Sie sich nach Ihrer Sitzung?",
     expoThankYouFinal: "Danke für Ihre Teilnahme!",
-    expoEmailSent: "Ihnen wurde soeben eine E-Mail mit Ihren Ergebnissen zugesendet.",
+    expoEmailSent: "Ihnen wurde soeben ein E-Mail mit Ihren Ergebnissen zugesendet.",
     expoSignOffLine1: "Wir wünschen Ihnen einen schönen Tag.",
     expoSignOffLine2: "Ihr brainLight Suisse Team",
     resetLink: "Diesen Sessel zurücksetzen",

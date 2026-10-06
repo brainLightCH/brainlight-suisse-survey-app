@@ -92,7 +92,7 @@ export async function POST(
   try {
     emailSent = await sendExpoResultsEmail({
       session: session as Session,
-      afterStress: stress,
+      after: { stress, fatigue_nerveuse, fatigue_physique },
       baseUrl: new URL(request.url).origin,
     });
   } catch (e) {

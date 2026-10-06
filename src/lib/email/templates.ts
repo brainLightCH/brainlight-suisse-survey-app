@@ -1,16 +1,23 @@
 import type { Lang } from "@/lib/i18n";
 
+export type MetricKey = "stress" | "fatigue_nerveuse" | "fatigue_physique";
+
+export interface MetricResult {
+  key: MetricKey;
+  before: number;
+  after: number;
+  /** Participant's own reduction in %, rounded. null = not computable. */
+  reduction: number | null;
+  /** Average reduction in % across the event's participants. */
+  average: number | null;
+}
+
 export interface ResultsEmailParams {
   lang: Lang;
   prenom: string;
   eventName: string;
-  scoreBefore: number;
-  scoreAfter: number;
-  /** Participant's own stress reduction in %, rounded. null = not computable. */
-  reduction: number | null;
-  /** Average stress reduction in % across the event's participants. */
-  average: number | null;
-  minutes: number;
+  /** One entry per metric, in display order. */
+  metrics: MetricResult[];
   ctaUrl: string;
   logoUrl: string;
 }
@@ -31,19 +38,33 @@ const COPY = {
       `Merci d'avoir participé à une séance brainLight lors ${
         /^[aeiouyhàâäéèêëîïôöùûü]/i.test(e) ? "d'" : "de "
       }${e} ! Nous avons le plaisir de vous transmettre vos résultats ci-dessous.`,
-    before: "Votre stress perçu avant la séance",
-    after: "Votre stress perçu après la séance",
-    reduction: "Réduction de votre stress perçu",
+    metrics: {
+      stress: {
+        before: "Votre stress perçu avant la séance",
+        after: "Votre stress perçu après la séance",
+        reduction: "Réduction de votre stress perçu",
+      },
+      fatigue_nerveuse: {
+        before: "Votre fatigue nerveuse et émotionnelle avant la séance",
+        after: "Votre fatigue nerveuse et émotionnelle après la séance",
+        reduction: "Réduction de votre fatigue nerveuse et émotionnelle",
+      },
+      fatigue_physique: {
+        before: "Votre fatigue physique avant la séance",
+        after: "Votre fatigue physique après la séance",
+        reduction: "Réduction de votre fatigue physique",
+      },
+    },
     average: (e: string) => `Moyenne des participants ${e}`,
-    positive: (m: number) =>
-      `En seulement ${m} minutes, votre corps et votre esprit ont pu ressentir les bienfaits d'une séance brainLight.`,
+    positive:
+      "En quelques minutes seulement, votre corps et votre esprit ont pu ressentir les bienfaits d'une séance brainLight.",
     neutral:
       "Une première séance dans l'effervescence d'un salon est une expérience particulière. Dans un cadre calme et avec une utilisation régulière, les effets se révèlent pleinement.",
     imagine:
       "Imaginez l'impact que pourrait avoir une utilisation régulière sur le bien-être et la performance au quotidien, pour vous et vos collaborateurs.",
     advice:
       "L'équipe brainLight Suisse est à votre entière disposition pour vous conseiller sur la mise en place de systèmes brainLight au sein de votre entreprise.",
-    button: "Organiser un échange",
+    button: "J'aimerais un entretien",
     signoff: ["Belle journée,", "L'équipe brainLight Suisse"],
     questionsTitle: "Vous avez des questions ?",
     questionsText: "Contactez-nous, nous sommes là pour vous !",
@@ -56,19 +77,33 @@ const COPY = {
     greeting: (p: string) => `Guten Tag ${p},`,
     intro: (e: string) =>
       `Vielen Dank für Ihre Teilnahme an einer brainLight-Sitzung an der ${e}! Wir freuen uns, Ihnen untenstehend Ihre Ergebnisse zu übermitteln.`,
-    before: "Ihr Stressempfinden vor der Sitzung",
-    after: "Ihr Stressempfinden nach der Sitzung",
-    reduction: "Reduktion Ihres Stressempfindens",
+    metrics: {
+      stress: {
+        before: "Ihr Stressempfinden vor der Sitzung",
+        after: "Ihr Stressempfinden nach der Sitzung",
+        reduction: "Reduktion Ihres Stressempfindens",
+      },
+      fatigue_nerveuse: {
+        before: "Ihre nervliche und emotionale Erschöpfung vor der Sitzung",
+        after: "Ihre nervliche und emotionale Erschöpfung nach der Sitzung",
+        reduction: "Reduktion Ihrer nervlichen und emotionalen Erschöpfung",
+      },
+      fatigue_physique: {
+        before: "Ihre körperliche Erschöpfung vor der Sitzung",
+        after: "Ihre körperliche Erschöpfung nach der Sitzung",
+        reduction: "Reduktion Ihrer körperlichen Erschöpfung",
+      },
+    },
     average: (e: string) => `Durchschnitt aller Teilnehmenden an der ${e}`,
-    positive: (m: number) =>
-      `In nur ${m} Minuten konnten Sie die Vorteile einer brainLight-Sitzung für Körper und Geist spüren.`,
+    positive:
+      "In nur wenigen Minuten konnten Sie die Vorteile einer brainLight-Sitzung für Körper und Geist spüren.",
     neutral:
       "Eine erste Sitzung im lebhaften Umfeld einer Messe ist eine besondere Erfahrung. In ruhiger Umgebung und bei regelmässiger Nutzung entfaltet sich die Wirkung voll.",
     imagine:
       "Stellen Sie sich vor, welche Wirkung eine regelmässige Nutzung auf das Wohlbefinden und die Leistungsfähigkeit im Alltag für Sie und Ihre Mitarbeitenden haben könnte.",
     advice:
       "Das brainLight Suisse Team steht Ihnen jederzeit zur Verfügung, um Ihr Projekt mit brainLight zu besprechen und zu realisieren.",
-    button: "Gespräch vereinbaren",
+    button: "Ich wünsche ein Gespräch",
     signoff: [
       "Wir wünschen Ihnen einen schönen Tag.",
       "Freundliche Grüsse",
@@ -133,8 +168,10 @@ export function renderResultsEmail(p: ResultsEmailParams): {
 } {
   const c = COPY[p.lang];
   const subject = c.subject(p.eventName);
-  const positive = p.reduction !== null && p.reduction > 0;
-  const showAverage = p.average !== null && p.average > 0;
+  // The closing message follows the stress result, as before.
+  const stress = p.metrics.find((m) => m.key === "stress");
+  const positive =
+    stress !== undefined && stress.reduction !== null && stress.reduction > 0;
 
   const row = (label: string, value: string, extra = "", color = "#10142A") =>
     `<tr><td style="padding:10px 0;font-family:${FONT};"><div style="font-size:13px;line-height:1.4;color:#5B6286;">${esc(
@@ -143,14 +180,24 @@ export function renderResultsEmail(p: ResultsEmailParams): {
       value
     )}</div>${extra}</td></tr>`;
 
-  const rows = [
-    row(c.before, `${p.scoreBefore} / 10`, bar(p.scoreBefore)),
-    row(c.after, `${p.scoreAfter} / 10`, bar(p.scoreAfter)),
-    positive
-      ? row(c.reduction, `${p.reduction} %`, "", "#1A9E3E")
-      : "",
-    showAverage ? row(c.average(p.eventName), `${p.average} %`) : "",
-  ].join("");
+  const divider =
+    '<tr><td style="padding:6px 0;font-size:0;line-height:0;"><div style="border-top:1px solid #DDE2F0;height:1px;font-size:0;line-height:0;">&nbsp;</div></td></tr>';
+
+  const rows = p.metrics
+    .map((m) => {
+      const l = c.metrics[m.key];
+      return [
+        row(l.before, `${m.before} / 10`, bar(m.before)),
+        row(l.after, `${m.after} / 10`, bar(m.after)),
+        m.reduction !== null && m.reduction > 0
+          ? row(l.reduction, `${m.reduction} %`, "", "#1A9E3E")
+          : "",
+        m.average !== null && m.average > 0
+          ? row(c.average(p.eventName), `${m.average} %`)
+          : "",
+      ].join("");
+    })
+    .join(divider);
 
   const p16 = `font-family:${FONT};font-size:16px;line-height:1.6;color:#1B2140;margin:0 0 16px;`;
 
@@ -179,7 +226,7 @@ export function renderResultsEmail(p: ResultsEmailParams): {
 </td></tr></table>
 </td></tr>
 <tr><td style="padding:8px 28px 0;">
-<p style="${p16}">${esc(positive ? c.positive(p.minutes) : c.neutral)}</p>
+<p style="${p16}">${esc(positive ? c.positive : c.neutral)}</p>
 <p style="${p16}">${esc(c.imagine)}</p>
 <p style="${p16}">${esc(c.advice)}</p>
 </td></tr>
@@ -210,12 +257,21 @@ ${esc(c.mail)}
     "",
     c.intro(p.eventName),
     "",
-    `${c.before}${c.colon} ${p.scoreBefore} / 10`,
-    `${c.after}${c.colon} ${p.scoreAfter} / 10`,
-    positive ? `${c.reduction}${c.colon} ${p.reduction} %` : "",
-    showAverage ? `${c.average(p.eventName)}${c.colon} ${p.average} %` : "",
-    "",
-    positive ? c.positive(p.minutes) : c.neutral,
+    ...p.metrics.flatMap((m) => {
+      const l = c.metrics[m.key];
+      return [
+        `${l.before}${c.colon} ${m.before} / 10`,
+        `${l.after}${c.colon} ${m.after} / 10`,
+        m.reduction !== null && m.reduction > 0
+          ? `${l.reduction}${c.colon} ${m.reduction} %`
+          : "",
+        m.average !== null && m.average > 0
+          ? `${c.average(p.eventName)}${c.colon} ${m.average} %`
+          : "",
+        "",
+      ];
+    }),
+    positive ? c.positive : c.neutral,
     "",
     c.imagine,
     "",

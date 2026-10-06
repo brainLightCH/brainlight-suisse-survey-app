@@ -1,22 +1,34 @@
 import { NextResponse } from "next/server";
 import type { Lang } from "@/lib/i18n";
-import { reductionPercent, sessionMinutes } from "@/lib/email/results";
+import { reductionPercent } from "@/lib/email/results";
 import { sendEmail } from "@/lib/email/send";
-import { renderResultsEmail, resolveCtaUrl } from "@/lib/email/templates";
+import {
+  renderResultsEmail,
+  resolveCtaUrl,
+  type MetricKey,
+  type MetricResult,
+} from "@/lib/email/templates";
+
+function sampleMetric(
+  key: MetricKey,
+  before: number,
+  after: number,
+  average: number
+): MetricResult {
+  return { key, before, after, reduction: reductionPercent(before, after), average };
+}
 
 function sample(lang: Lang, baseUrl: string, neutral: boolean) {
   const eventName = process.env.EXPO_EVENT_NAME?.trim() || "IFAS 2026";
-  const scoreBefore = 7;
-  const scoreAfter = neutral ? 8 : 3;
   return renderResultsEmail({
     lang,
     prenom: lang === "fr" ? "Marie" : "Max",
     eventName,
-    scoreBefore,
-    scoreAfter,
-    reduction: reductionPercent(scoreBefore, scoreAfter),
-    average: 48,
-    minutes: sessionMinutes(),
+    metrics: [
+      sampleMetric("stress", 7, neutral ? 8 : 3, 48),
+      sampleMetric("fatigue_nerveuse", 6, neutral ? 6 : 3, 45),
+      sampleMetric("fatigue_physique", 5, neutral ? 5 : 3, 40),
+    ],
     ctaUrl: resolveCtaUrl(lang, eventName),
     logoUrl: `${baseUrl}/brainlight-logo.png`,
   });

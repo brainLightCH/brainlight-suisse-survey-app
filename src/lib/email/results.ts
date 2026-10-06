@@ -4,16 +4,15 @@ import { computeBucket } from "@/lib/stats";
 import type { Lang } from "@/lib/i18n";
 import type { Session } from "@/lib/types";
 import { sendEmail } from "./send";
-import { renderResultsEmail, resolveCtaUrl } from "./templates";
+import {
+  renderResultsEmail,
+  resolveCtaUrl,
+  type MetricResult,
+} from "./templates";
 
 export function reductionPercent(before: number, after: number): number | null {
   if (!(before > 0)) return null;
   return Math.round(((before - after) / before) * 100);
-}
-
-export function sessionMinutes(): number {
-  const n = Number(process.env.EXPO_SESSION_MINUTES);
-  return n > 0 ? Math.round(n) : 20;
 }
 
 // Sends the participant's results email once their "after" answers are saved.
@@ -21,15 +20,17 @@ export function sessionMinutes(): number {
 // blocks data saving: the caller has already persisted everything.
 export async function sendExpoResultsEmail(opts: {
   session: Session;
-  afterStress: number;
+  after: { stress: number; fatigue_nerveuse: number; fatigue_physique: number };
   baseUrl: string;
 }): Promise<boolean> {
-  const { session, afterStress, baseUrl } = opts;
+  const { session, after, baseUrl } = opts;
   if (!session.send_results_email) return false;
 
   const { data: lead } = await supabaseAdmin
     .from("responses")
-    .select("id, prenom, email, lang, stress, email_consent, email_sent_at")
+    .select(
+      "id, prenom, email, lang, stress, fatigue_nerveuse, fatigue_physique, email_consent, email_sent_at"
+    )
     .eq("session_id", session.id)
     .eq("phase", "before")
     .maybeSingle();
@@ -53,17 +54,21 @@ export async function sendExpoResultsEmail(opts: {
   const bucket = computeBucket(
     (rows ?? []) as unknown as Parameters<typeof computeBucket>[0]
   );
-  const average = bucket.delta ? Math.round(-bucket.delta.stress) : null;
+  const metrics: MetricResult[] = (
+    ["stress", "fatigue_nerveuse", "fatigue_physique"] as const
+  ).map((key) => ({
+    key,
+    before: lead[key],
+    after: after[key],
+    reduction: reductionPercent(lead[key], after[key]),
+    average: bucket.delta ? Math.round(-bucket.delta[key]) : null,
+  }));
 
   const { subject, html, text } = renderResultsEmail({
     lang,
     prenom: lead.prenom ?? "",
     eventName: session.event_name,
-    scoreBefore: lead.stress,
-    scoreAfter: afterStress,
-    reduction: reductionPercent(lead.stress, afterStress),
-    average,
-    minutes: sessionMinutes(),
+    metrics,
     ctaUrl: resolveCtaUrl(lang, session.event_name),
     logoUrl: `${baseUrl}/brainlight-logo.png`,
   });
