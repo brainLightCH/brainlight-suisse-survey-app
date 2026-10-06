@@ -12,6 +12,7 @@ export interface Session {
   is_active: boolean;
   notes: string | null;
   station: number;
+  send_results_email: boolean;
   created_at: string;
   closed_at: string | null;
 }
@@ -33,6 +34,8 @@ export interface ResponseRow {
   entreprise: string | null;
   adresse: string | null;
   lang: string | null;
+  email_consent: boolean;
+  email_sent_at: string | null;
   created_at: string;
 }
 

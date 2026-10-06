@@ -68,6 +68,7 @@ export async function POST(
       active_numbers: [1],
       is_active: true,
       station,
+      send_results_email: true,
     })
     .select()
     .single();
@@ -84,6 +85,7 @@ export async function POST(
     fatigue_nerveuse,
     fatigue_physique,
     lead_optin: true,
+    email_consent: true,
     prenom: prenom.trim(),
     nom: nom.trim(),
     email: email.trim(),

@@ -44,7 +44,7 @@ export const translations = {
     address: "Adresse complète (rue, NPA, ville, pays)",
     companyExpo: "Entreprise",
     expoConsent:
-      "J'accepte que brainLight Suisse utilise mes coordonnées pour me recontacter suite à ce salon.",
+      "J'accepte que brainLight Suisse utilise mes coordonnées pour m'envoyer mes résultats par email et me recontacter suite à ce salon.",
     expoIntro: "Merci de nous laisser vos coordonnées avant de commencer.",
     next: "Suivant",
     expoWaitingTitle: "Merci !",
@@ -103,7 +103,7 @@ export const translations = {
     address: "Vollständige Adresse (Strasse, PLZ, Ort, Land)",
     companyExpo: "Unternehmen",
     expoConsent:
-      "Ich bin damit einverstanden, dass brainLight Suisse meine Kontaktdaten nutzt, um mich nach dieser Messe zu kontaktieren.",
+      "Ich bin damit einverstanden, dass brainLight Suisse meine Kontaktdaten nutzt, um mir meine Ergebnisse per E-Mail zu senden und mich nach dieser Messe zu kontaktieren.",
     expoIntro: "Bitte hinterlassen Sie uns Ihre Kontaktdaten, bevor Sie beginnen.",
     next: "Weiter",
     expoWaitingTitle: "Danke!",

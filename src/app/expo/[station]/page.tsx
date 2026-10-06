@@ -51,6 +51,7 @@ export default function ExpoStationPage() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
 
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
@@ -166,6 +167,8 @@ export default function ExpoStationPage() {
         }),
       });
       if (!res.ok) throw new Error("submit_failed");
+      const json = await res.json().catch(() => null);
+      setEmailSent(Boolean(json?.email_sent));
       setStep("done");
     } catch {
       setError(translations[lang].errorGeneric);
@@ -380,7 +383,12 @@ export default function ExpoStationPage() {
     content = (
       <>
         <p className="text-2xl mb-2">✓</p>
-        <p className="text-lg text-center mb-6">{t.expoThankYouFinal}</p>
+        <p className="text-lg text-center mb-4">{t.expoThankYouFinal}</p>
+        {emailSent && (
+          <p className="text-text-muted text-sm text-center max-w-sm mb-6">
+            {t.expoEmailSent}
+          </p>
+        )}
         <p className="text-text-muted text-sm text-center">
           {t.expoSignOffLine1}
           <br />

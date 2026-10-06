@@ -16,6 +16,7 @@ create table if not exists sessions (
   is_active boolean not null default true,
   notes text,
   station int not null default 0,
+  send_results_email boolean not null default false,
   created_at timestamptz not null default now(),
   closed_at timestamptz
 );
@@ -23,6 +24,9 @@ create table if not exists sessions (
 -- Migration : ajoute les colonnes aux bases déjà créées avant leur introduction.
 alter table sessions add column if not exists notes text;
 alter table sessions add column if not exists station int not null default 0;
+-- Si true : un email de résultats est envoyé au participant après sa
+-- soumission "après" (activé automatiquement pour les séances Expo).
+alter table sessions add column if not exists send_results_email boolean not null default false;
 
 -- Migration : élargit la contrainte de type existante pour autoriser 'expo'
 -- (sans effet si la table vient d'être créée avec la liste déjà à jour).
@@ -61,6 +65,8 @@ create table if not exists responses (
   entreprise text,
   adresse text,
   lang text,
+  email_consent boolean not null default false,
+  email_sent_at timestamptz,
   created_at timestamptz not null default now(),
   unique (session_id, phase, participant_number)
 );
@@ -73,6 +79,11 @@ alter table responses add column if not exists usage_likelihood int;
 alter table responses add column if not exists adresse text;
 -- Langue choisie par le participant ('fr' ou 'de') : toutes les séances.
 alter table responses add column if not exists lang text;
+-- Consentement explicite à recevoir les résultats par email, et horodatage
+-- de l'envoi (null = pas encore envoyé). Portés par la ligne qui contient
+-- l'adresse email (la ligne "avant" pour Expo).
+alter table responses add column if not exists email_consent boolean not null default false;
+alter table responses add column if not exists email_sent_at timestamptz;
 
 create index if not exists responses_session_idx on responses (session_id);
 

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { parseStation } from "@/lib/expo";
 import { computeBucket } from "@/lib/stats";
+import { sendExpoResultsEmail } from "@/lib/email/results";
+import type { Session } from "@/lib/types";
 
 export async function POST(
   request: Request,
@@ -84,5 +86,18 @@ export async function POST(
     .update({ is_active: false, closed_at: new Date().toISOString() })
     .eq("id", session.id);
 
-  return NextResponse.json({ ok: true });
+  // Everything is saved at this point; a failed email must never undo or
+  // block that, so it's reported back as a flag rather than an error.
+  let emailSent = false;
+  try {
+    emailSent = await sendExpoResultsEmail({
+      session: session as Session,
+      afterStress: stress,
+      baseUrl: new URL(request.url).origin,
+    });
+  } catch (e) {
+    console.error("[results-email] unexpected failure:", e);
+  }
+
+  return NextResponse.json({ ok: true, email_sent: emailSent });
 }
