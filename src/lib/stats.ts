@@ -12,6 +12,17 @@ interface RatingRow {
   usage_likelihood?: number | null;
 }
 
+// The "to" filter is a calendar date (YYYY-MM-DD) meant inclusively. Compared
+// as-is it means midnight at the start of that day, which drops the whole last
+// day (and makes a same-day filter always empty). Use the next day as an
+// exclusive upper bound instead.
+function exclusiveUpperBound(to: string): string {
+  const d = new Date(`${to}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return to;
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString();
+}
+
 interface JoinedRow extends RatingRow {
   sessions: { sector: string | null; company_name: string | null } | null;
 }
@@ -27,7 +38,7 @@ async function fetchRows(filters: StatsFilters): Promise<JoinedRow[]> {
   if (filters.sector) query = query.eq("sessions.sector", filters.sector);
   if (filters.company) query = query.eq("sessions.company_name", filters.company);
   if (filters.from) query = query.gte("sessions.created_at", filters.from);
-  if (filters.to) query = query.lte("sessions.created_at", filters.to);
+  if (filters.to) query = query.lt("sessions.created_at", exclusiveUpperBound(filters.to));
 
   const { data, error } = await query;
   if (error) throw error;
@@ -189,7 +200,7 @@ export async function getExportRows(filters: StatsFilters): Promise<ExportRow[]>
   if (filters.sector) query = query.eq("sessions.sector", filters.sector);
   if (filters.company) query = query.eq("sessions.company_name", filters.company);
   if (filters.from) query = query.gte("sessions.created_at", filters.from);
-  if (filters.to) query = query.lte("sessions.created_at", filters.to);
+  if (filters.to) query = query.lt("sessions.created_at", exclusiveUpperBound(filters.to));
 
   const { data, error } = await query;
   if (error) throw error;
