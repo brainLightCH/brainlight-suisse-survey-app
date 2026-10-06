@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { sendLeadToCrm } from "@/lib/email/crm";
+import { SESSION_TYPE_LABELS } from "@/lib/constants";
+import type { SessionType } from "@/lib/types";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -62,7 +65,7 @@ export async function POST(request: Request) {
 
   const { data: session, error: sessionError } = await supabaseAdmin
     .from("sessions")
-    .select("id, phase, is_active")
+    .select("id, phase, is_active, type, event_name, company_name, sector")
     .eq("id", session_id)
     .maybeSingle();
 
@@ -104,5 +107,51 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Opt-in lead → Odoo CRM. Data is already saved; a failure here is only
+  // logged. crm_sent_at guards against a resubmission creating a duplicate.
+  const hasContact = Boolean(email?.trim() || telephone?.trim());
+  if (isLead && hasContact && session.type !== "expo" && !data.crm_sent_at) {
+    try {
+      const { data: before } = await supabaseAdmin
+        .from("responses")
+        .select("stress")
+        .eq("session_id", session_id)
+        .eq("phase", "before")
+        .eq("participant_number", participant_number)
+        .maybeSingle();
+
+      const typeLabel = SESSION_TYPE_LABELS[session.type as SessionType];
+      const where = [session.company_name, session.sector]
+        .filter(Boolean)
+        .join(", ");
+
+      await sendLeadToCrm({
+        responseId: data.id,
+        source: `${typeLabel} — ${session.event_name}${
+          where ? ` (${where})` : ""
+        } — participant n°${participant_number}`,
+        eventName: session.event_name,
+        lang: typeof lang === "string" ? lang : null,
+        contact: {
+          prenom: prenom ?? null,
+          nom: nom ?? null,
+          entreprise: entreprise ?? null,
+          email: email ?? null,
+          telephone: telephone ?? null,
+          adresse: null,
+        },
+        results: {
+          stressBefore: before?.stress ?? null,
+          stressAfter: stress,
+          usageLikelihood:
+            typeof usage_likelihood === "number" ? usage_likelihood : null,
+        },
+      });
+    } catch (e) {
+      console.error("[crm] unexpected failure:", e);
+    }
+  }
+
   return NextResponse.json({ response: data });
 }

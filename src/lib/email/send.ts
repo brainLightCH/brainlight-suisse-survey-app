@@ -5,6 +5,10 @@ export interface SendEmailInput {
   subject: string;
   html: string;
   text: string;
+  /** Overrides the default Reply-To. */
+  replyTo?: string;
+  /** Display name only — the address always stays on the verified domain. */
+  fromName?: string;
 }
 
 export type SendEmailResult =
@@ -15,6 +19,17 @@ export type SendEmailResult =
 // mail.brainlight-suisse.ch subdomain, not the root domain.
 const DEFAULT_FROM = "brainLight Suisse <info@mail.brainlight-suisse.ch>";
 const REPLY_TO = "info@brainlight-suisse.ch";
+
+function resolveFrom(fromName?: string): string {
+  const configured = process.env.EMAIL_FROM?.trim() || DEFAULT_FROM;
+  if (!fromName) return configured;
+  const address = configured.match(/<([^>]+)>/)?.[1] ?? configured;
+  const safeName = fromName
+    .replace(/["<>\r\n,;]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return safeName ? `${safeName} <${address}>` : configured;
+}
 
 // Never throws: callers treat a failed email as non-blocking.
 export async function sendEmail(
@@ -31,9 +46,9 @@ export async function sendEmail(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: process.env.EMAIL_FROM?.trim() || DEFAULT_FROM,
+        from: resolveFrom(input.fromName),
         to: [input.to],
-        reply_to: REPLY_TO,
+        reply_to: input.replyTo || REPLY_TO,
         subject: input.subject,
         html: input.html,
         text: input.text,

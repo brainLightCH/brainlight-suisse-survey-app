@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { parseStation, expoEventName } from "@/lib/expo";
+import { sendLeadToCrm } from "@/lib/email/crm";
 
 export async function POST(
   request: Request,
@@ -77,29 +78,57 @@ export async function POST(
     return NextResponse.json({ error: sessionError.message }, { status: 500 });
   }
 
-  const { error: responseError } = await supabaseAdmin.from("responses").insert({
-    session_id: session.id,
-    phase: "before",
-    participant_number: 1,
-    stress,
-    fatigue_nerveuse,
-    fatigue_physique,
-    lead_optin: true,
-    email_consent: true,
-    prenom: prenom.trim(),
-    nom: nom.trim(),
-    email: email.trim(),
-    telephone: telephone.trim(),
-    entreprise: entreprise?.trim() || null,
-    adresse: adresse.trim(),
-    lang,
-  });
+  const { data: inserted, error: responseError } = await supabaseAdmin
+    .from("responses")
+    .insert({
+      session_id: session.id,
+      phase: "before",
+      participant_number: 1,
+      stress,
+      fatigue_nerveuse,
+      fatigue_physique,
+      lead_optin: true,
+      email_consent: true,
+      prenom: prenom.trim(),
+      nom: nom.trim(),
+      email: email.trim(),
+      telephone: telephone.trim(),
+      entreprise: entreprise?.trim() || null,
+      adresse: adresse.trim(),
+      lang,
+    })
+    .select("id")
+    .single();
 
-  if (responseError) {
+  if (responseError || !inserted) {
     // Roll back the session so the station doesn't stay stuck on a
     // half-written attempt.
     await supabaseAdmin.from("sessions").delete().eq("id", session.id);
-    return NextResponse.json({ error: responseError.message }, { status: 500 });
+    return NextResponse.json(
+      { error: responseError?.message ?? "insert_failed" },
+      { status: 500 }
+    );
+  }
+
+  // The lead goes to the CRM right away rather than at the end of the
+  // cycle, so a visitor who never comes back (or a staff reset) is not lost.
+  try {
+    await sendLeadToCrm({
+      responseId: inserted.id,
+      source: `Expo — ${session.event_name} (fauteuil ${station})`,
+      eventName: session.event_name,
+      lang,
+      contact: {
+        prenom: prenom.trim(),
+        nom: nom.trim(),
+        entreprise: entreprise.trim(),
+        email: email.trim(),
+        telephone: telephone.trim(),
+        adresse: adresse.trim(),
+      },
+    });
+  } catch (e) {
+    console.error("[crm] unexpected failure:", e);
   }
 
   return NextResponse.json({ session });

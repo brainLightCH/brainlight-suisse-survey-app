@@ -36,6 +36,7 @@ export interface ResponseRow {
   lang: string | null;
   email_consent: boolean;
   email_sent_at: string | null;
+  crm_sent_at: string | null;
   created_at: string;
 }
 

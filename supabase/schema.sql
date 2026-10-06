@@ -67,6 +67,7 @@ create table if not exists responses (
   lang text,
   email_consent boolean not null default false,
   email_sent_at timestamptz,
+  crm_sent_at timestamptz,
   created_at timestamptz not null default now(),
   unique (session_id, phase, participant_number)
 );
@@ -84,6 +85,10 @@ alter table responses add column if not exists lang text;
 -- l'adresse email (la ligne "avant" pour Expo).
 alter table responses add column if not exists email_consent boolean not null default false;
 alter table responses add column if not exists email_sent_at timestamptz;
+-- Horodatage de l'envoi de la fiche lead vers Odoo CRM (par email vers
+-- l'alias Odoo). null = pas (encore) envoyée : évite les doublons et permet
+-- de repérer les fiches dont l'envoi aurait échoué.
+alter table responses add column if not exists crm_sent_at timestamptz;
 
 create index if not exists responses_session_idx on responses (session_id);
 
