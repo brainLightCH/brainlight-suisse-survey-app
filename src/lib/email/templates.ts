@@ -116,7 +116,7 @@ function bar(score: number): string {
 }
 
 export function resolveCtaUrl(lang: Lang, eventName: string): string {
-  const fromEnv = process.env.EMAIL_CTA_URL?.trim();
+  const fromEnv = process.env.RESULTS_EMAIL_CTA_URL?.trim();
   if (fromEnv) return fromEnv;
   return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
     COPY[lang].subject(eventName)
