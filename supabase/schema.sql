@@ -36,10 +36,10 @@ alter table sessions add constraint sessions_type_check
 
 -- Une seule session active à la fois PAR STATION. station = 0 est le mode
 -- coach normal (Showcase / Event / Energy Days) : une seule séance active
--- au total, comme avant. station 1 à 4 sont les fauteuils expo (salons,
+-- au total, comme avant. station 1 à 5 sont les fauteuils expo (salons,
 -- voir /expo/[station]) : chacun a sa propre séance active, indépendante
--- des 3 autres fauteuils et du mode coach — jusqu'à 5 séances actives en
--- parallèle au total (1 coach + 4 fauteuils expo).
+-- des autres fauteuils et du mode coach — jusqu'à 6 séances actives en
+-- parallèle au total (1 coach + 5 fauteuils expo).
 drop index if exists sessions_single_active_idx;
 create unique index if not exists sessions_single_active_per_station_idx
   on sessions (station)

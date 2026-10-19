@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import LanguageSelect from "@/components/LanguageSelect";
 import Slider from "@/components/Slider";
 import Button from "@/components/Button";
+import { EXPO_STATIONS } from "@/lib/constants";
 import { translations, type Lang } from "@/lib/i18n";
 import type { Session } from "@/lib/types";
 
@@ -43,8 +44,7 @@ function writeStoredLang(station: number, lang: Lang) {
 export default function ExpoStationPage() {
   const params = useParams<{ station: string }>();
   const stationNum = Number(params.station);
-  const stationValid =
-    Number.isInteger(stationNum) && stationNum >= 1 && stationNum <= 4;
+  const stationValid = (EXPO_STATIONS as readonly number[]).includes(stationNum);
 
   const [lang, setLang] = useState<Lang | null>(null);
   const [step, setStep] = useState<Step>(stationValid ? "loading" : "invalid");

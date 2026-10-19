@@ -1,6 +1,8 @@
+import { EXPO_STATIONS } from "./constants";
+
 export function parseStation(param: string): number | null {
   const n = Number(param);
-  if (!Number.isInteger(n) || n < 1 || n > 4) return null;
+  if (!(EXPO_STATIONS as readonly number[]).includes(n)) return null;
   return n;
 }
 

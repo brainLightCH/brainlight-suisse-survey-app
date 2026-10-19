@@ -44,4 +44,4 @@ export const CREATABLE_SESSION_TYPES: SessionType[] = [
   "energy_days",
 ];
 
-export const EXPO_STATIONS = [1, 2, 3, 4] as const;
+export const EXPO_STATIONS = [1, 2, 3, 4, 5] as const;
