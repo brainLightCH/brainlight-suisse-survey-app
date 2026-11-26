@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<style>body{margin:0}img{max-width:100%}</style>
+<title>Guide Survey App brainLight</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one reading column; dark brand band on top; QR codes always on white tiles so they scan in both themes. */
+:root {
+  --bg: #f3f5fb;
+  --surface: #ffffff;
+  --surface-2: #e8ecf6;
+  --fg: #141a33;
+  --muted: #555d80;
+  --line: #d5dbea;
+  --accent: #1d6fa3;          /* sky, darkened for text on light */
+  --accent-soft: #dcefff;
+  --energy: #b4600f;          /* coach / action */
+  --energy-soft: #fdebd6;
+  --good: #1c8a3e;
+  --good-soft: #dcf5e3;
+  --band: #10142a;            /* brand band, same in both themes */
+  --band-fg: #edeffa;
+  --band-muted: #8b92b8;
+  --qr-bg: #ffffff;
+  --font-display: "Sora", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Sora", "Segoe UI", system-ui, sans-serif;
+  --font-ui: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10142a; --surface: #181e3d; --surface-2: #1f2650; --fg: #edeffa; --muted: #9aa1c4;
+    --line: #2a3260; --accent: #8fd9ff; --accent-soft: #1b3150; --energy: #ffb86b; --energy-soft: #3a2c22;
+    --good: #4ade80; --good-soft: #17352a; --band: #0b0f22; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10142a; --surface: #181e3d; --surface-2: #1f2650; --fg: #edeffa; --muted: #9aa1c4;
+  --line: #2a3260; --accent: #8fd9ff; --accent-soft: #1b3150; --energy: #ffb86b; --energy-soft: #3a2c22;
+  --good: #4ade80; --good-soft: #17352a; --band: #0b0f22; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+}
+.wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.2; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(1.9rem, 4.5vw, 2.6rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: clamp(1.45rem, 3.2vw, 1.85rem); font-weight: 700; }
+h3 { font-size: 1.15rem; font-weight: 600; }
+p { margin: 0; }
+a { color: var(--accent); }
+.muted { color: var(--muted); }
+.eyebrow {
+  font-family: var(--font-ui); font-size: 0.75rem; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent);
+}
+.ui {
+  display: inline-block; font-family: var(--font-ui); font-size: 0.82em; font-weight: 600;
+  padding: 0.05em 0.5em; border-radius: 6px; border: 1px solid var(--line);
+  background: var(--surface-2); color: var(--fg); white-space: nowrap;
+}
+.url { font-family: var(--font-ui); font-size: 0.85em; word-break: break-all; color: var(--accent); }
+
+/* Hero band */
+.band {
+  background: var(--band); color: var(--band-fg);
+  margin-top: calc(-1 * env(safe-area-inset-top, 0px));
+  padding-top: calc(env(safe-area-inset-top, 0px) + 2.5rem);
+  padding-bottom: 2.5rem;
+}
+.band .wrap { display: grid; gap: 1.25rem; }
+.band img.logo { width: 170px; height: auto; }
+.band .lead { color: var(--band-muted); max-width: 62ch; }
+.band .meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; font-family: var(--font-ui); font-size: 0.8rem; color: var(--band-muted); }
+.band .meta b { color: var(--band-fg); font-weight: 600; }
+
+main { display: grid; gap: 3.5rem; padding-block: 2.5rem 4rem; }
+section { display: grid; gap: 1.25rem; min-width: 0; }
+.part-head { display: grid; gap: 0.5rem; padding-top: 1.5rem; border-top: 2px solid var(--fg); }
+.part-head .eyebrow { color: var(--muted); }
+.prose { display: grid; gap: 0.8rem; max-width: 68ch; }
+
+/* Table of contents */
+.toc { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.75rem; }
+.toc a {
+  display: grid; gap: 0.2rem; text-decoration: none; color: var(--fg);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.1rem;
+}
+.toc a:hover, .toc a:focus-visible { border-color: var(--accent); outline: none; }
+.toc .num { font-family: var(--font-ui); font-size: 0.75rem; color: var(--accent); font-weight: 600; }
+
+/* QR cards */
+.qr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+.qr-card {
+  display: grid; grid-template-columns: 112px 1fr; gap: 1rem; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1rem;
+  min-width: 0;
+}
+.qr-card > div { min-width: 0; display: grid; gap: 0.25rem; }
+.qr { background: var(--qr-bg); border-radius: 10px; padding: 6px; line-height: 0; }
+.qr svg { width: 100%; height: auto; display: block; }
+.qr-card h3 { font-size: 1rem; }
+.qr-card p { font-size: 0.88rem; }
+.chairs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.9rem; }
+.chair {
+  display: grid; gap: 0.6rem; justify-items: center; text-align: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1rem 0.9rem;
+}
+.chair .n { font-family: var(--font-display); font-weight: 700; font-size: 1.6rem; line-height: 1; }
+.chair .qr { width: 100%; max-width: 150px; }
+
+/* Session types */
+.types { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.9rem; }
+.type {
+  display: grid; gap: 0.45rem; align-content: start;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1.1rem;
+}
+.type .cap { font-family: var(--font-ui); font-size: 0.78rem; font-weight: 600; color: var(--accent); }
+.type p { font-size: 0.92rem; color: var(--muted); }
+
+/* Flow steps */
+.flow { display: grid; gap: 0; list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.flow > li {
+  counter-increment: step;
+  display: grid; grid-template-columns: 2.5rem 1fr; gap: 0 1rem;
+  padding-bottom: 1.4rem; position: relative;
+}
+.flow > li::before {
+  content: counter(step);
+  grid-row: 1 / span 2;
+  width: 2.5rem; height: 2.5rem; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-ui); font-weight: 600;
+  background: var(--surface); border: 2px solid var(--line); color: var(--fg);
+  position: relative; z-index: 1;
+}
+.flow > li::after {
+  content: ""; position: absolute; left: calc(1.25rem - 1px); top: 2.5rem; bottom: 0;
+  width: 2px; background: var(--line);
+}
+.flow > li:last-child::after { display: none; }
+.flow > li:last-child { padding-bottom: 0; }
+.flow .step-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; min-height: 2.5rem; }
+.flow .step-body { display: grid; gap: 0.5rem; grid-column: 2; min-width: 0; }
+.flow .step-body ul { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.3rem; }
+.who {
+  font-family: var(--font-ui); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 0.15rem 0.55rem; border-radius: 999px;
+}
+.who.p { background: var(--accent-soft); color: var(--accent); }
+.who.c { background: var(--energy-soft); color: var(--energy); }
+.who.a { background: var(--good-soft); color: var(--good); }
+
+/* Number grid illustration */
+.grid-demo { display: grid; grid-template-columns: repeat(5, 2.4rem); gap: 0.35rem; margin-top: 0.2rem; }
+.grid-demo span {
+  aspect-ratio: 1; border-radius: 8px; display: grid; place-items: center;
+  font-family: var(--font-ui); font-weight: 600; font-size: 0.85rem;
+}
+.g-done { background: var(--good-soft); color: var(--good); border: 1.5px solid var(--good); }
+.g-wait { background: var(--surface-2); color: var(--muted); border: 1.5px solid transparent; }
+.g-off { color: var(--line); border: 1.5px dashed var(--line); }
+.legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; font-size: 0.82rem; color: var(--muted); }
+.legend i { display: inline-block; width: 0.8rem; height: 0.8rem; border-radius: 3px; vertical-align: -0.1em; margin-right: 0.35rem; }
+
+/* Callouts */
+.callout {
+  border-radius: 12px; padding: 1rem 1.15rem; display: grid; gap: 0.4rem;
+  background: var(--energy-soft); border: 1px solid color-mix(in srgb, var(--energy) 35%, transparent);
+}
+.callout.info { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+.callout .t { font-weight: 600; }
+.callout p, .callout li { font-size: 0.94rem; }
+.callout ul { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.25rem; }
+
+/* Event name panel */
+.event-name { display: grid; gap: 0.9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1.2rem; }
+.names { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; }
+.names div { background: var(--surface-2); border-radius: 10px; padding: 0.75rem 0.9rem; display: grid; gap: 0.15rem; }
+.names .lbl { font-family: var(--font-ui); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.names .val { font-weight: 600; }
+.names .old .val { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+
+/* Troubleshooting */
+.faq { display: grid; gap: 0.6rem; }
+.faq div { display: grid; gap: 0.2rem; padding: 0.85rem 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.faq b { font-weight: 600; }
+.faq p { font-size: 0.93rem; color: var(--muted); }
+
+/* Contact */
+.contact {
+  display: grid; grid-template-columns: 120px 1fr; gap: 1.25rem; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 1.25rem;
+}
+.contact img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; }
+.contact .lines { display: grid; gap: 0.35rem; min-width: 0; }
+.contact .row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.contact .val { font-family: var(--font-ui); font-weight: 600; font-size: 0.95rem; user-select: all; }
+.copy {
+  font: inherit; font-family: var(--font-ui); font-size: 0.72rem; cursor: pointer;
+  padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg);
+}
+.copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+footer { padding-block: 0 3rem; font-size: 0.82rem; color: var(--muted); }
+
+@media (max-width: 520px) {
+  .qr-card { grid-template-columns: 92px 1fr; }
+  .contact { grid-template-columns: 1fr; justify-items: start; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+.back {
+  justify-self: start; font-family: var(--font-ui); font-size: 0.8rem; font-weight: 600;
+  color: var(--band-muted); text-decoration: none;
+}
+.back:hover, .back:focus-visible { color: var(--band-fg); }
+
+/* Print / PDF: A4, light palette whatever the screen theme, nothing cut across pages. */
+@page { size: A4; margin: 14mm 13mm 16mm; }
+@media print {
+  :root, :root[data-theme="dark"], :root:not([data-theme="light"]) {
+    --bg: #ffffff; --surface: #ffffff; --surface-2: #eef1f8; --fg: #141a33; --muted: #4f577a;
+    --line: #cfd6e8; --accent: #1d6fa3; --accent-soft: #e3f2ff; --energy: #a85a0e; --energy-soft: #fdf0e1;
+    --good: #1c8a3e; --good-soft: #e1f6e7; --band: #10142a; color-scheme: light;
+  }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-size: 10pt; line-height: 1.5; }
+  .wrap { max-width: none; padding-left: 0; padding-right: 0; }
+  .band { margin-top: 0; padding: 7mm 8mm; border-radius: 4mm; }
+  .band .wrap { gap: 3mm; }
+  .band img.logo { width: 42mm; }
+  h1 { font-size: 21pt; }
+  h2 { font-size: 15pt; }
+  h3 { font-size: 11.5pt; }
+  /* Chrome overlaps grid items that are split across pages: use plain
+     block flow for everything that can span a page break. */
+  main, section, .flow, .prose, .step-body { display: block; }
+  main { padding-block: 6mm 0; }
+  main > section + section { margin-top: 8mm; }
+  section > * + *, .prose > * + *, .step-body > * + * { margin-top: 3.5mm; }
+  .flow > li + li { margin-top: 0; }
+  .url { word-break: normal; overflow-wrap: normal; }
+  .qr-card .url { font-size: 7.5pt; }
+  .back, .copy, section[aria-labelledby="sommaire"] { display: none !important; }
+  #partie-1, #partie-2, section[aria-labelledby="faq-h"] { break-before: page; }
+  .part-head { padding-top: 0; border-top: none; }
+  h2, h3, .step-head { break-after: avoid; }
+  .qr-card, .chair, .type, .callout, .faq div, .contact, .event-name, .names div, .flow > li, .grid-demo { break-inside: avoid; }
+  .qr-grid { grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+  .qr-card { grid-template-columns: 1fr; justify-items: center; text-align: center; padding: 4mm; }
+  .qr-card .qr { width: 34mm; }
+  .chairs { grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+  .chair .qr { max-width: 38mm; }
+  .types { grid-template-columns: repeat(3, 1fr); gap: 3mm; }
+  .flow > li { padding-bottom: 3.5mm; }
+  .contact { grid-template-columns: 30mm 1fr; }
+  .contact img { width: 30mm; height: 30mm; }
+  .contact .val { user-select: text; }
+  a { color: inherit; text-decoration: none; }
+  footer { padding-block: 4mm 0; }
+}
+</style>
+</head>
+<body>
+
+
+<header class="band">
+  <div class="wrap">
+    <a class="back" href="/coach">← Espace coach</a>
+    <img class="logo" src="data:image/png;base64,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" alt="brainLight Suisse">
+    <div style="display:grid;gap:.6rem">
+      <h1>Guide Survey App brainLight</h1>
+      <p class="lead">Le mode d'emploi complet de l'application de questionnaires avant / après séance, pour Marcel et l'équipe brainLight Suisse. Gardez-le sous la main pendant les séances et les salons.</p>
+    </div>
+    <div class="meta">
+      <span>Application <b>survey.brainlight-suisse.ch</b></span>
+      <span>Version du <b>26 novembre 2026</b></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section aria-labelledby="sommaire">
+    <h2 id="sommaire" class="eyebrow" style="font-size:.78rem">Sommaire</h2>
+    <nav class="toc">
+      <a href="#acces"><span class="num">Accès</span><span>Les liens et QR codes</span></a>
+      <a href="#partie-1"><span class="num">Partie 1</span><span>Séances avec coach : Showcase, Event, Energy Days</span></a>
+      <a href="#partie-2"><span class="num">Partie 2</span><span>Salons et événements : les 5 fauteuils en autonomie</span></a>
+      <a href="#contact"><span class="num">Contact</span><span>Nom d'événement, problème technique</span></a>
+    </nav>
+  </section>
+
+  <section id="acces" aria-labelledby="acces-h">
+    <div class="part-head">
+      <span class="eyebrow">Accès</span>
+      <h2 id="acces-h">Les trois adresses à connaître</h2>
+    </div>
+    <div class="qr-grid">
+      <div class="qr-card">
+        <div class="qr"><svg role="img" aria-label="QR code https://survey.brainlight-suisse.ch/" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 31 31" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h31v31H0z"/><path stroke="#10142a" d="M1 1.5h7m1 0h1m3 0h2m1 0h1m2 0h3m1 0h7M1 2.5h1m5 0h1m1 0h2m1 0h3m2 0h1m1 0h1m3 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m2 0h2m1 0h1m2 0h1m2 0h2m2 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m1 0h2m1 0h1m2 0h1m2 0h1m1 0h1m2 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m2 0h3m2 0h2m3 0h1m2 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m2 0h3m1 0h1m2 0h1m2 0h1m2 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M9 8.5h2m1 0h2m4 0h1M1 9.5h1m1 0h2m1 0h3m2 0h2m1 0h1m1 0h4m3 0h1m2 0h1m1 0h2M1 10.5h5m3 0h2m2 0h3m1 0h1m2 0h6m3 0h1M1 11.5h1m4 0h4m3 0h2m2 0h3m1 0h2m1 0h2m1 0h2M2 12.5h1m1 0h1m1 0h1m1 0h4m4 0h2m3 0h4m4 0h1M2 13.5h2m1 0h1m1 0h2m2 0h2m2 0h2m1 0h3m3 0h1m1 0h2M1 14.5h1m1 0h2m1 0h1m1 0h3m4 0h3m2 0h1m1 0h2m3 0h3M1 15.5h9m1 0h1m1 0h2m2 0h1m1 0h3m3 0h1m1 0h3M2 16.5h1m1 0h3m1 0h2m1 0h1m1 0h1m1 0h1m1 0h1m7 0h1m2 0h1M1 17.5h3m1 0h3m1 0h5m1 0h2m2 0h3m3 0h2m1 0h1M3 18.5h2m1 0h1m4 0h2m2 0h3m1 0h1m1 0h1m2 0h1m1 0h3M1 19.5h1m3 0h3m1 0h1m2 0h8m1 0h1m1 0h3m1 0h1M3 20.5h1m2 0h1m2 0h1m1 0h1m1 0h3m1 0h3m1 0h1m1 0h1m3 0h1M2 21.5h3m1 0h2m1 0h1m1 0h1m1 0h3m1 0h11M9 22.5h1m3 0h1m3 0h1m3 0h1m3 0h5M1 23.5h7m1 0h3m1 0h1m1 0h1m1 0h5m1 0h1m1 0h2m1 0h1M1 24.5h1m5 0h1m1 0h1m4 0h4m1 0h1m1 0h1m3 0h2m2 0h1M1 25.5h1m1 0h3m1 0h1m2 0h1m2 0h1m2 0h3m2 0h5m1 0h1M1 26.5h1m1 0h3m1 0h1m1 0h2m3 0h1m1 0h2m4 0h1m2 0h2m2 0h1M1 27.5h1m1 0h3m1 0h1m1 0h1m3 0h1m6 0h1m3 0h1m2 0h1m1 0h1M1 28.5h1m5 0h1m4 0h2m6 0h3m1 0h1m1 0h1m1 0h1M1 29.5h7m1 0h1m4 0h2m1 0h1m1 0h3m1 0h2m1 0h1m1 0h1"/></svg>
+</div>
+        <div>
+          <h3>Accès participant</h3>
+          <p class="muted">Le QR code racine, à montrer aux participants des séances avec coach.</p>
+          <span class="url">survey.brainlight-suisse.ch</span>
+        </div>
+      </div>
+      <div class="qr-card">
+        <div class="qr"><svg role="img" aria-label="QR code https://survey.brainlight-suisse.ch/coach" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 31 31" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h31v31H0z"/><path stroke="#10142a" d="M1 1.5h7m1 0h3m5 0h1m1 0h3m1 0h7M1 2.5h1m5 0h1m1 0h2m2 0h3m1 0h1m1 0h1m3 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m3 0h1m1 0h4m2 0h2m2 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m1 0h2m1 0h4m2 0h1m1 0h1m2 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m3 0h1m1 0h4m3 0h1m2 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m2 0h1m1 0h2m1 0h1m1 0h1m2 0h1m2 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M9 8.5h5m4 0h1M1 9.5h1m1 0h2m1 0h3m2 0h1m3 0h5m3 0h1m2 0h1m1 0h2M1 10.5h1m6 0h5m4 0h1m2 0h6m3 0h1M1 11.5h1m1 0h3m1 0h1m1 0h1m1 0h1m3 0h1m1 0h3m1 0h2m1 0h2m1 0h2M2 12.5h1m1 0h2m4 0h2m1 0h5m3 0h4m4 0h1M1 13.5h2m2 0h1m1 0h1m6 0h3m1 0h3m3 0h1m1 0h2M1 14.5h1m4 0h1m5 0h1m2 0h3m2 0h1m1 0h2m3 0h3M1 15.5h2m1 0h4m3 0h2m4 0h1m1 0h3m3 0h1m1 0h3M2 16.5h4m3 0h2m2 0h1m1 0h1m1 0h1m7 0h1m2 0h1M2 17.5h1m1 0h4m1 0h2m2 0h2m1 0h1m2 0h3m3 0h2m1 0h1M2 18.5h3m1 0h1m2 0h1m2 0h1m3 0h2m1 0h1m1 0h1m2 0h1m1 0h3M1 19.5h1m4 0h2m4 0h1m3 0h4m1 0h1m1 0h3m1 0h1M3 20.5h2m4 0h1m1 0h1m3 0h1m1 0h3m1 0h1m1 0h1m3 0h1M2 21.5h1m4 0h2m2 0h4m2 0h11M9 22.5h1m3 0h2m2 0h1m3 0h1m3 0h5M1 23.5h7m1 0h1m1 0h4m2 0h5m1 0h1m1 0h2m1 0h1M1 24.5h1m5 0h1m1 0h2m5 0h2m1 0h1m1 0h1m3 0h2m1 0h2M1 25.5h1m1 0h3m1 0h1m2 0h3m2 0h4m2 0h5m1 0h3M1 26.5h1m1 0h3m1 0h1m1 0h2m2 0h1m1 0h3m4 0h1m2 0h2m2 0h1M1 27.5h1m1 0h3m1 0h1m1 0h3m8 0h1m3 0h1m2 0h1m1 0h1M1 28.5h1m5 0h1m3 0h4m5 0h3m1 0h1m1 0h1m1 0h1M1 29.5h7m1 0h1m1 0h1m1 0h3m1 0h1m1 0h3m1 0h2m1 0h1m1 0h1"/></svg>
+</div>
+        <div>
+          <h3>Espace coach</h3>
+          <p class="muted">Créer et piloter une séance, consulter les données.</p>
+          <span class="url">survey.brainlight-suisse.ch/<wbr>coach</span>
+        </div>
+      </div>
+      <div class="qr-card">
+        <div class="qr"><svg role="img" aria-label="QR code https://brainlight-suisse.odoo.com/odoo/crm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 35 35" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h35v35H0z"/><path stroke="#10142a" d="M1 1.5h7m2 0h1m1 0h1m4 0h1m1 0h4m1 0h1m2 0h7M1 2.5h1m5 0h1m3 0h3m2 0h2m1 0h1m1 0h2m2 0h1m1 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m3 0h4m2 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m1 0h5m5 0h1m2 0h1m1 0h2m1 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m1 0h2m1 0h1m1 0h5m2 0h1m1 0h1m3 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m1 0h1m2 0h1m1 0h2m3 0h2m1 0h4m1 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M9 8.5h1m1 0h1m1 0h1m1 0h1m1 0h1m2 0h3m1 0h1M1 9.5h1m1 0h5m2 0h3m1 0h1m3 0h1m1 0h2m1 0h3m1 0h5M1 10.5h3m2 0h1m1 0h1m1 0h1m2 0h2m2 0h2m1 0h2m2 0h1m2 0h2m1 0h2m1 0h1M1 11.5h2m3 0h2m2 0h2m2 0h3m1 0h1m2 0h1m1 0h1m2 0h2m1 0h1m1 0h2M1 12.5h2m5 0h1m1 0h1m1 0h1m1 0h1m1 0h5m4 0h3m1 0h5M5 13.5h1m1 0h1m2 0h2m3 0h3m3 0h5m2 0h3m1 0h2M1 14.5h4m1 0h1m1 0h4m1 0h1m2 0h1m2 0h1m5 0h1m1 0h1m2 0h1m1 0h2M7 15.5h1m2 0h1m1 0h2m2 0h4m1 0h2m3 0h2m1 0h4M1 16.5h1m1 0h3m2 0h1m3 0h1m2 0h2m5 0h2m2 0h2m1 0h1m1 0h1M1 17.5h3m1 0h1m1 0h1m1 0h4m1 0h1m1 0h1m1 0h1m2 0h1m1 0h4m1 0h2m3 0h1M1 18.5h2m2 0h1m2 0h6m1 0h1m1 0h1m2 0h3m1 0h1m2 0h2m1 0h2m1 0h1M3 19.5h1m2 0h2m6 0h1m1 0h2m1 0h1m1 0h2m3 0h4m1 0h2M2 20.5h2m5 0h4m2 0h1m1 0h1m3 0h3m1 0h9M2 21.5h1m1 0h1m2 0h3m1 0h1m2 0h2m3 0h2m1 0h1m2 0h2m1 0h3M1 22.5h1m2 0h1m5 0h1m3 0h4m3 0h4m2 0h1m2 0h1m2 0h1M1 23.5h1m1 0h1m2 0h4m1 0h2m5 0h3m2 0h1m1 0h1m2 0h1m1 0h1m1 0h1M1 24.5h1m2 0h3m3 0h1m4 0h1m1 0h1m2 0h6m1 0h1m2 0h4M1 25.5h1m1 0h2m1 0h4m1 0h1m1 0h2m3 0h1m1 0h1m2 0h1m1 0h5m3 0h1M9 26.5h2m1 0h1m4 0h4m4 0h1m3 0h1m1 0h1m1 0h1M1 27.5h7m4 0h1m1 0h3m1 0h1m4 0h3m1 0h1m1 0h1m1 0h2M1 28.5h1m5 0h1m1 0h3m1 0h1m3 0h3m1 0h1m2 0h2m3 0h3m1 0h1M1 29.5h1m1 0h3m1 0h1m1 0h2m2 0h1m1 0h1m1 0h1m3 0h3m1 0h6m1 0h2M1 30.5h1m1 0h3m1 0h1m1 0h1m6 0h1m2 0h1m6 0h1m2 0h2m2 0h1M1 31.5h1m1 0h3m1 0h1m1 0h1m2 0h2m2 0h2m3 0h2m2 0h4m1 0h1M1 32.5h1m5 0h1m2 0h5m1 0h1m5 0h1m1 0h1m4 0h3M1 33.5h7m1 0h1m2 0h1m1 0h3m1 0h2m1 0h1m1 0h6m3 0h1"/></svg>
+</div>
+        <div>
+          <h3>CRM Odoo</h3>
+          <p class="muted">Tous les leads de l'app arrivent ici, dans les opportunités.</p>
+          <span class="url">brainlight-suisse.odoo.com/<wbr>odoo/crm</span>
+        </div>
+      </div>
+    </div>
+    <div class="callout info">
+      <p class="t">L'espace coach n'a pas de mot de passe.</p>
+      <p>Ne le montrez jamais aux participants et ne le diffusez pas en dehors de l'équipe. Les participants n'utilisent que le QR code racine (séances avec coach) ou les QR codes des fauteuils (salons).</p>
+    </div>
+  </section>
+
+  <section id="partie-1" aria-labelledby="p1-h">
+    <div class="part-head">
+      <span class="eyebrow">Partie 1</span>
+      <h2 id="p1-h">Séances avec coach</h2>
+      <p class="prose muted">Le coach crée la séance, les participants répondent sur leur téléphone avant et après la séance brainLight, et le coach fait avancer les étapes.</p>
+    </div>
+
+    <h3>Les trois types de séances</h3>
+    <div class="types">
+      <div class="type">
+        <span class="cap">1 participant</span>
+        <h3>Showcase</h3>
+        <p>Le one-to-one : une présentation en tête-à-tête, au showroom par exemple.</p>
+      </div>
+      <div class="type">
+        <span class="cap">jusqu'à 4 participants</span>
+        <h3>Event</h3>
+        <p>Les petits groupes : un stand, une démo à plusieurs fauteuils, un petit groupe.</p>
+      </div>
+      <div class="type">
+        <span class="cap">jusqu'à 15 participants</span>
+        <h3>Energy Days</h3>
+        <p>Le workshop en entreprise. On indique aussi l'entreprise et son secteur, et les participants répondent à une question de plus à la fin : la probabilité qu'ils utilisent brainLight au travail.</p>
+      </div>
+    </div>
+
+    <h3>L'interface participant</h3>
+    <div class="prose">
+      <p>Les participants scannent le <strong>QR code racine</strong> (<span class="url">survey.brainlight-suisse.ch</span>). Ils choisissent d'abord leur langue, français ou allemand, puis :</p>
+      <ul style="margin:0;padding-left:1.2rem;display:grid;gap:.3rem">
+        <li><strong>Showcase</strong> : le questionnaire s'ouvre directement.</li>
+        <li><strong>Event et Energy Days</strong> : chacun choisit d'abord son <strong>numéro</strong> dans une grille. Un numéro déjà utilisé est grisé, ce qui évite que deux personnes répondent avec le même numéro. Chaque participant garde le même numéro pour l'avant et l'après.</li>
+      </ul>
+      <p>Le questionnaire compte trois curseurs de 1 à 10 : niveau de stress, fatigue nerveuse et émotionnelle, fatigue physique.</p>
+      <p>Si aucune séance n'est ouverte, le participant voit « Aucune séance en cours pour le moment ». C'est normal : le coach doit d'abord créer la séance.</p>
+    </div>
+
+    <h3>L'espace coach</h3>
+    <div class="prose">
+      <p>Sur <span class="url">survey.brainlight-suisse.ch/<wbr>coach</span>, deux boutons :</p>
+      <ul style="margin:0;padding-left:1.2rem;display:grid;gap:.3rem">
+        <li><span class="ui">Consulter mes données</span> ouvre le tableau de bord : moyennes avant / après, réductions en pourcentage, filtres par type de séance, secteur, entreprise et dates, résumé du dernier Energy Days, export CSV.</li>
+        <li><span class="ui">Créer une séance</span> ouvre la création, puis le pilotage de la séance en cours.</li>
+      </ul>
+    </div>
+
+    <h3>Créer une séance</h3>
+    <ol class="flow" aria-label="Création d'une séance">
+      <li>
+        <div class="step-head"><span class="who c">Coach</span><strong>Choisir le type</strong></div>
+        <div class="step-body"><p>Showcase, Event ou Energy Days.</p></div>
+      </li>
+      <li>
+        <div class="step-head"><span class="who c">Coach</span><strong>Donner un nom à l'événement</strong></div>
+        <div class="step-body">
+          <p>Par exemple « Showroom Crissier » ou « Démo SIG ». Ce nom apparaît dans l'email de résultats envoyé aux participants, dans les rapports et dans les leads Odoo. Choisissez un nom clair.</p>
+          <p class="muted">Energy Days : renseignez aussi le nom de l'entreprise et son secteur d'activité.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-head"><span class="who c">Coach</span><strong>Cliquer sur <span class="ui">Créer la séance</span></strong></div>
+        <div class="step-body"><p>L'écran de pilotage s'affiche, en phase <span class="ui">Avant</span>. Les participants peuvent scanner le QR code racine.</p></div>
+      </li>
+    </ol>
+    <div class="callout">
+      <p class="t">Une seule séance coach à la fois, pour toute l'équipe.</p>
+      <p>Tant qu'une séance n'est pas fermée, personne ne peut en créer une autre. Si l'espace coach affiche directement une séance en cours au lieu du formulaire de création, c'est qu'elle n'a pas été fermée : terminez-la avec <span class="ui">Fermer le questionnaire</span>.</p>
+    </div>
+
+    <h3>Le déroulé d'une séance</h3>
+    <ol class="flow" aria-label="Déroulé d'une séance coach">
+      <li>
+        <div class="step-head"><span class="who p">Participant</span><strong>Questionnaire « avant »</strong></div>
+        <div class="step-body">
+          <p>Avant la séance brainLight, chaque participant scanne le QR code racine, choisit sa langue, son numéro (sauf en Showcase) et remplit le questionnaire. Il voit ensuite « Merci ! Vous pouvez maintenant fermer ce dispositif et profiter de votre séance ».</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-head"><span class="who c">Coach</span><strong>Suivre les réponses</strong></div>
+        <div class="step-body">
+          <p>Sur l'écran coach, le numéro de chaque participant qui a répondu <strong>passe au vert</strong>, et un compteur indique par exemple « 6 / 8 réponses reçues ».</p>
+          <div class="grid-demo" aria-hidden="true">
+            <span class="g-done">1</span><span class="g-done">2</span><span class="g-done">3</span><span class="g-wait">4</span><span class="g-done">5</span>
+            <span class="g-done">6</span><span class="g-done">7</span><span class="g-wait">8</span><span class="g-off">9</span><span class="g-off">10</span>
+          </div>
+          <p class="legend"><span><i class="g-done"></i>a répondu</span><span><i class="g-wait"></i>attendu</span><span><i class="g-off"></i>désactivé</span></p>
+          <p>Moins de participants que de numéros ? Cliquez sur un numéro pour le <strong>désactiver</strong> (ou le réactiver). Le compteur ne compte alors que les numéros utilisés.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-head"><span class="who c">Coach</span><strong>Lancer la 2e étape avec <span class="ui">Début de la séance</span></strong></div>
+        <div class="step-body">
+          <p>Quand tout le monde a répondu, c'est le coach qui active lui-même la suite : le bouton fait passer la séance en phase <span class="ui">Après</span>. Les participants profitent ensuite de leur séance brainLight.</p>
+          <p class="muted">Après ce clic, on ne peut plus répondre au questionnaire « avant ». Un numéro qui n'a pas répondu avant ne peut pas être réactivé pour l'après.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-head"><span class="who p">Participant</span><strong>Questionnaire « après »</strong></div>
+        <div class="step-body">
+          <p>Après la séance brainLight, chacun rescanne le même QR code racine, reprend <strong>le même numéro</strong> et remplit le questionnaire « après » (avec la question supplémentaire en Energy Days).</p>
+          <p>En bas du formulaire, une case l'invite à recevoir ses résultats par email et à être recontacté par brainLight Suisse. S'il la coche, il laisse ses coordonnées : prénom, nom, email (obligatoire), téléphone et entreprise.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-head"><span class="who a">Automatique</span><strong>Email de résultats et lead dans Odoo</strong></div>
+        <div class="step-body">
+          <p>Si la case est cochée, le participant reçoit aussitôt un email avec ses résultats avant / après (avec le nom de l'événement), et son lead arrive dans le <strong>CRM Odoo</strong>, avec ses coordonnées et ses résultats. Son écran affiche « Un email vient de vous être envoyé avec vos résultats ».</p>
+          <p class="muted">Sans case cochée, les réponses sont enregistrées de façon anonyme : pas d'email, pas de lead.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-head"><span class="who c">Coach</span><strong>Fermer la séance</strong></div>
+        <div class="step-body">
+          <p>Quand tous les « après » sont arrivés (numéros à nouveau verts), ajoutez si besoin une remarque dans <strong>Notes</strong>, puis cliquez sur <span class="ui">Fermer le questionnaire</span> et <span class="ui">Confirmer</span>.</p>
+        </div>
+      </li>
+    </ol>
+    <div class="callout">
+      <p class="t">Toujours fermer la séance.</p>
+      <p>C'est la fermeture qui libère l'application pour la séance suivante, pour vous comme pour vos collègues. Une séance oubliée bloque la création de toute nouvelle séance coach. La fermeture est définitive : vérifiez que tous les « après » sont arrivés.</p>
+    </div>
+  </section>
+
+  <section id="partie-2" aria-labelledby="p2-h">
+    <div class="part-head">
+      <span class="eyebrow">Partie 2</span>
+      <h2 id="p2-h">Salons et événements : les 5 fauteuils</h2>
+      <p class="prose muted">Sur un salon, chaque fauteuil a son propre QR code et fonctionne en totale autonomie, sans intervention du coach.</p>
+    </div>
+
+    <div class="chairs">
+      <div class="chair"><span class="n">1</span><div class="qr"><svg role="img" aria-label="QR code https://survey.brainlight-suisse.ch/expo/1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 31 31" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h31v31H0z"/><path stroke="#10142a" d="M1 1.5h7m1 0h2m1 0h2m3 0h1m1 0h3m1 0h7M1 2.5h1m5 0h1m1 0h1m7 0h1m1 0h1m3 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m2 0h1m3 0h3m2 0h2m2 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m1 0h1m1 0h5m2 0h1m1 0h1m2 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m3 0h1m2 0h1m1 0h1m3 0h1m2 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m2 0h2m2 0h1m2 0h1m2 0h1m2 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M9 8.5h1m1 0h1m1 0h1m1 0h1m2 0h1M1 9.5h1m1 0h2m1 0h3m1 0h1m1 0h2m1 0h5m3 0h1m2 0h1m1 0h2M1 10.5h1m2 0h2m5 0h1m1 0h1m1 0h1m1 0h1m2 0h6m3 0h1M3 11.5h2m2 0h2m1 0h2m3 0h1m1 0h3m1 0h2m1 0h2m1 0h2M1 12.5h2m2 0h1m3 0h1m1 0h1m2 0h1m1 0h2m3 0h4m4 0h1M6 13.5h2m1 0h1m3 0h4m1 0h3m3 0h1m1 0h2M2 14.5h1m1 0h2m3 0h2m3 0h4m2 0h1m1 0h2m3 0h3M1 15.5h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h1m1 0h1m1 0h3m3 0h1m1 0h3M1 16.5h1m7 0h4m2 0h1m1 0h1m7 0h1m2 0h1M4 17.5h4m1 0h8m2 0h3m3 0h2m1 0h1M3 18.5h1m4 0h4m1 0h1m2 0h2m1 0h1m1 0h1m2 0h1m1 0h3M1 19.5h1m1 0h1m3 0h2m1 0h1m2 0h7m1 0h1m1 0h3m1 0h1M4 20.5h2m4 0h3m4 0h3m1 0h1m1 0h1m3 0h1M2 21.5h3m1 0h3m2 0h3m3 0h11M9 22.5h3m3 0h1m1 0h1m3 0h1m3 0h5M1 23.5h7m1 0h1m1 0h1m3 0h1m1 0h5m1 0h1m1 0h2m1 0h1M1 24.5h1m5 0h1m1 0h1m1 0h1m1 0h5m1 0h1m1 0h1m3 0h2M1 25.5h1m1 0h3m1 0h1m2 0h1m2 0h1m2 0h3m2 0h5m1 0h3M1 26.5h1m1 0h3m1 0h1m1 0h2m3 0h4m4 0h1m2 0h2m2 0h1M1 27.5h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m5 0h1m3 0h1m2 0h1m1 0h1M1 28.5h1m5 0h1m12 0h3m1 0h1m1 0h1m1 0h1M1 29.5h7m1 0h2m3 0h2m1 0h1m1 0h3m1 0h2m1 0h1m1 0h1"/></svg>
+</div><span class="url">/expo/1</span></div>
+      <div class="chair"><span class="n">2</span><div class="qr"><svg role="img" aria-label="QR code https://survey.brainlight-suisse.ch/expo/2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 31 31" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h31v31H0z"/><path stroke="#10142a" d="M1 1.5h7m1 0h1m1 0h1m5 0h1m1 0h3m1 0h7M1 2.5h1m5 0h1m1 0h5m3 0h1m1 0h1m3 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m2 0h2m2 0h3m2 0h2m2 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m1 0h1m1 0h1m2 0h2m2 0h1m1 0h1m2 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m2 0h1m3 0h1m1 0h1m3 0h1m2 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m4 0h1m1 0h1m2 0h1m2 0h1m2 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M9 8.5h1m2 0h2m1 0h1m2 0h1M1 9.5h1m1 0h2m1 0h3m1 0h4m1 0h5m3 0h1m2 0h1m1 0h2M2 10.5h1m1 0h1m1 0h1m1 0h1m1 0h4m1 0h1m1 0h1m2 0h6m3 0h1M3 11.5h1m1 0h1m1 0h5m1 0h1m1 0h1m1 0h3m1 0h2m1 0h2m1 0h2M1 12.5h6m1 0h2m1 0h2m1 0h1m1 0h2m3 0h4m4 0h1M1 13.5h1m1 0h1m3 0h3m1 0h6m1 0h3m3 0h1m1 0h2M1 14.5h1m1 0h4m1 0h2m4 0h4m2 0h1m1 0h2m3 0h3M1 15.5h1m1 0h6m1 0h2m3 0h1m1 0h1m1 0h3m3 0h1m1 0h3M1 16.5h1m1 0h4m8 0h1m1 0h1m7 0h1m2 0h1M1 17.5h2m1 0h2m1 0h1m3 0h1m1 0h4m2 0h3m3 0h2m1 0h1M8 18.5h1m1 0h2m1 0h1m2 0h2m1 0h1m1 0h1m2 0h1m1 0h3M1 19.5h1m1 0h1m1 0h1m1 0h2m4 0h7m1 0h1m1 0h3m1 0h1M4 20.5h1m1 0h1m3 0h1m1 0h2m3 0h3m1 0h1m1 0h1m3 0h1M2 21.5h3m2 0h2m1 0h2m1 0h1m3 0h11M9 22.5h1m1 0h1m1 0h1m1 0h1m1 0h1m3 0h1m3 0h5M1 23.5h7m1 0h1m2 0h4m1 0h5m1 0h1m1 0h2m1 0h1M1 24.5h1m5 0h1m1 0h1m4 0h1m1 0h2m1 0h1m1 0h1m3 0h2M1 25.5h1m1 0h3m1 0h1m4 0h1m3 0h3m2 0h5m1 0h3M1 26.5h1m1 0h3m1 0h1m1 0h1m1 0h1m2 0h4m4 0h1m2 0h2m2 0h1M1 27.5h1m1 0h3m1 0h1m1 0h4m2 0h1m4 0h1m3 0h1m2 0h1m1 0h1M1 28.5h1m5 0h1m2 0h1m1 0h1m2 0h1m4 0h3m1 0h1m1 0h1m1 0h1M1 29.5h7m1 0h1m1 0h1m2 0h2m1 0h1m1 0h3m1 0h2m1 0h1m1 0h1"/></svg>
+</div><span class="url">/expo/2</span></div>
+      <div class="chair"><span class="n">3</span><div class="qr"><svg role="img" aria-label="QR code https://survey.brainlight-suisse.ch/expo/3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 31 31" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h31v31H0z"/><path stroke="#10142a" d="M1 1.5h7m2 0h1m2 0h1m3 0h1m1 0h3m1 0h7M1 2.5h1m5 0h1m2 0h2m1 0h1m1 0h4m2 0h1m1 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m1 0h1m2 0h1m2 0h1m1 0h1m5 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m1 0h1m4 0h2m2 0h1m1 0h1m2 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m1 0h2m1 0h1m1 0h2m2 0h4m1 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m1 0h1m1 0h1m1 0h1m2 0h1m2 0h1m3 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M9 8.5h2m1 0h2m2 0h1m2 0h1m1 0h1M1 9.5h1m1 0h5m2 0h2m2 0h2m2 0h1m1 0h1m2 0h5M1 10.5h2m2 0h2m3 0h1m4 0h1m1 0h1m2 0h6m3 0h1M1 11.5h1m2 0h4m1 0h2m5 0h2M1 12.5h1m3 0h1m3 0h1m1 0h1m7 0h3m2 0h3m1 0h1M4 13.5h1m2 0h1m1 0h1m2 0h5m1 0h3m3 0h1m1 0h2M1 14.5h1m2 0h2m3 0h1m2 0h3m2 0h5m1 0h3m3 0h1M2 15.5h6m1 0h1m2 0h5m4 0h3m2 0h2M3 16.5h1m1 0h1m2 0h1m1 0h4m1 0h1m1 0h1m7 0h1m2 0h1M2 17.5h1m1 0h2m1 0h1m2 0h1m1 0h1m1 0h1m3 0h1m1 0h1m1 0h1m1 0h1m1 0h2M1 18.5h1m3 0h1m2 0h1m1 0h2m2 0h1m5 0h6m1 0h1m1 0h1M1 19.5h1m1 0h3m1 0h2m1 0h2m1 0h7m1 0h1m1 0h3m1 0h1M1 20.5h1m2 0h1m1 0h1m2 0h1m3 0h1m1 0h3m4 0h4m2 0h1M1 21.5h1m3 0h3m1 0h1m1 0h1m1 0h2m1 0h1m1 0h1m2 0h5m1 0h3M9 22.5h2m1 0h1m2 0h1m1 0h1m3 0h1m3 0h5M1 23.5h7m4 0h3m1 0h2m2 0h2m1 0h1m1 0h3M1 24.5h1m5 0h1m1 0h1m2 0h2m1 0h1m4 0h2m3 0h1m2 0h2M1 25.5h1m1 0h3m1 0h1m1 0h2m2 0h1m2 0h3m2 0h5m1 0h3M1 26.5h1m1 0h3m1 0h1m1 0h1m1 0h1m5 0h3m1 0h1m2 0h1m1 0h4M1 27.5h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m1 0h2m1 0h1m2 0h7M1 28.5h1m5 0h1m2 0h3m1 0h1m5 0h3m1 0h1m1 0h1m1 0h1M1 29.5h7m1 0h4m3 0h3m1 0h1m1 0h2m1 0h3"/></svg>
+</div><span class="url">/expo/3</span></div>
+      <div class="chair"><span class="n">4</span><div class="qr"><svg role="img" aria-label="QR code https://survey.brainlight-suisse.ch/expo/4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 31 31" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h31v31H0z"/><path stroke="#10142a" d="M1 1.5h7m1 0h2m1 0h1m4 0h1m1 0h3m1 0h7M1 2.5h1m5 0h1m1 0h1m2 0h2m3 0h1m1 0h1m3 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m4 0h1m1 0h3m2 0h2m2 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m1 0h2m3 0h2m2 0h1m1 0h1m2 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m3 0h2m1 0h1m1 0h1m3 0h1m2 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m2 0h5m2 0h1m2 0h1m2 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M9 8.5h1m1 0h2m2 0h1m2 0h1M1 9.5h1m1 0h2m1 0h3m1 0h1m1 0h1m2 0h5m3 0h1m2 0h1m1 0h2M3 10.5h1m6 0h1m1 0h2m1 0h1m1 0h1m2 0h6m3 0h1M4 11.5h1m1 0h2m2 0h3m2 0h1m1 0h3m1 0h2m1 0h2m1 0h2M5 12.5h1m7 0h2m1 0h2m3 0h4m4 0h1M5 13.5h5m2 0h1m1 0h3m1 0h3m3 0h1m1 0h2M1 14.5h3m4 0h1m2 0h1m1 0h5m2 0h1m1 0h2m3 0h3M1 15.5h1m1 0h2m1 0h4m2 0h1m2 0h1m1 0h1m1 0h3m3 0h1m1 0h3M1 16.5h3m4 0h1m1 0h1m1 0h2m1 0h1m1 0h1m7 0h1m2 0h1M1 17.5h5m1 0h2m2 0h1m2 0h3m2 0h3m3 0h2m1 0h1M2 18.5h1m1 0h1m5 0h1m5 0h2m1 0h1m1 0h1m2 0h1m1 0h3M1 19.5h1m1 0h1m2 0h2m2 0h3m1 0h6m1 0h1m1 0h3m1 0h1M4 20.5h2m4 0h1m1 0h2m3 0h3m1 0h1m1 0h1m3 0h1M2 21.5h3m2 0h4m1 0h1m4 0h11M9 22.5h3m3 0h1m1 0h1m3 0h1m3 0h5M1 23.5h7m1 0h2m1 0h2m3 0h5m1 0h1m1 0h2m1 0h1M1 24.5h1m5 0h1m1 0h4m1 0h1m1 0h2m1 0h1m1 0h1m3 0h2M1 25.5h1m1 0h3m1 0h1m2 0h1m5 0h3m2 0h5m1 0h3M1 26.5h1m1 0h3m1 0h1m1 0h1m2 0h1m2 0h3m4 0h1m2 0h2m2 0h1M1 27.5h1m1 0h3m1 0h1m1 0h2m1 0h3m5 0h1m3 0h1m2 0h1m1 0h1M1 28.5h1m5 0h1m2 0h1m2 0h1m1 0h1m4 0h3m1 0h1m1 0h1m1 0h1M1 29.5h7m1 0h1m1 0h1m2 0h2m1 0h1m1 0h3m1 0h2m1 0h1m1 0h1"/></svg>
+</div><span class="url">/expo/4</span></div>
+      <div class="chair"><span class="n">5</span><div class="qr"><svg role="img" aria-label="QR code https://survey.brainlight-suisse.ch/expo/5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 31 31" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h31v31H0z"/><path stroke="#10142a" d="M1 1.5h7m3 0h3m3 0h1m1 0h3m1 0h7M1 2.5h1m5 0h1m5 0h1m1 0h4m2 0h1m1 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m1 0h3m3 0h1m1 0h1m5 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m1 0h3m2 0h2m2 0h1m1 0h1m2 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m1 0h1m1 0h1m2 0h2m2 0h4m1 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m1 0h2m5 0h1m2 0h1m3 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M9 8.5h4m3 0h1m2 0h1m1 0h1M1 9.5h1m1 0h5m2 0h1m2 0h3m2 0h1m1 0h1m2 0h5M1 10.5h1m1 0h3m2 0h1m1 0h2m3 0h1m1 0h1m2 0h6m3 0h1M1 11.5h1m1 0h1m3 0h2m1 0h1m1 0h2m2 0h2M2 12.5h5m1 0h1m3 0h2m5 0h3m2 0h3m1 0h1M1 13.5h1m1 0h5m1 0h1m1 0h2m1 0h3m1 0h3m3 0h1m1 0h2M1 14.5h2m3 0h1m4 0h2m1 0h1m2 0h5m1 0h3m3 0h1M2 15.5h3m1 0h2m2 0h2m1 0h4m4 0h3m2 0h2M2 16.5h3m1 0h1m4 0h1m3 0h1m1 0h1m7 0h1m2 0h1M2 17.5h4m1 0h2m1 0h1m1 0h3m3 0h1m1 0h1m1 0h1m1 0h1m1 0h2M1 18.5h2m1 0h2m4 0h1m2 0h2m5 0h6m1 0h1m1 0h1M1 19.5h1m1 0h2m1 0h2m4 0h1m1 0h6m1 0h1m1 0h3m1 0h1M1 20.5h1m2 0h2m3 0h1m3 0h1m1 0h3m4 0h4m2 0h1M1 21.5h1m3 0h3m4 0h1m1 0h1m1 0h1m1 0h1m2 0h5m1 0h3M9 22.5h1m2 0h2m1 0h1m1 0h1m3 0h1m3 0h5M1 23.5h7m2 0h1m1 0h2m1 0h3m2 0h2m1 0h1m1 0h3M1 24.5h1m5 0h1m1 0h3m1 0h1m1 0h1m4 0h2m3 0h1m2 0h2M1 25.5h1m1 0h3m1 0h1m1 0h1m2 0h2m2 0h3m2 0h5m1 0h3M1 26.5h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m2 0h3m1 0h1m2 0h1m1 0h4M1 27.5h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h3m1 0h1m2 0h7M1 28.5h1m5 0h1m2 0h2m1 0h2m5 0h3m1 0h1m1 0h1m1 0h1M1 29.5h7m1 0h4m3 0h3m1 0h1m1 0h2m1 0h3"/></svg>
+</div><span class="url">/expo/5</span></div>
+    </div>
+    <p class="muted" style="font-size:.9rem">Chaque QR code ouvre <span class="url">survey.brainlight-suisse.ch/expo/</span> suivi du numéro du fauteuil. Placez le bon QR code (ou la bonne tablette) sur le bon fauteuil : chaque fauteuil a sa propre séance.</p>
+
+    <h3>Le parcours d'un visiteur</h3>
+    <ol class="flow" aria-label="Parcours d'un visiteur sur un fauteuil">
+      <li>
+        <div class="step-head"><span class="who p">Visiteur</span><strong>Langue et coordonnées d'abord</strong></div>
+        <div class="step-body">
+          <p>Le visiteur scanne le QR code du fauteuil, choisit sa langue, puis laisse ses coordonnées : prénom, nom, entreprise, email, téléphone et adresse. Il doit cocher la case de consentement (envoi des résultats par email et recontact). La récolte du lead se fait donc <strong>en amont</strong>, avant la séance.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-head"><span class="who p">Visiteur</span><strong>Questionnaire « avant »</strong></div>
+        <div class="step-body"><p>Les trois mêmes curseurs que dans les séances coach.</p></div>
+      </li>
+      <li>
+        <div class="step-head"><span class="who a">Automatique</span><strong>Lead envoyé dans Odoo</strong></div>
+        <div class="step-body"><p>Dès que le questionnaire « avant » est validé, le lead part dans Odoo. Même si le visiteur s'en va en cours de route, son contact est conservé.</p></div>
+      </li>
+      <li>
+        <div class="step-head"><span class="who p">Visiteur</span><strong>La séance</strong></div>
+        <div class="step-body"><p>L'écran affiche « Dès que le fauteuil est disponible, merci de prendre place. Profitez de votre séance ! ». À la fin, le visiteur appuie sur <span class="ui">J'ai terminé la séance</span>.</p></div>
+      </li>
+      <li>
+        <div class="step-head"><span class="who p">Visiteur</span><strong>Questionnaire « après »</strong></div>
+        <div class="step-body"><p>Le visiteur remplit le questionnaire « après ». L'avant et l'après s'enchaînent tout seuls, sans que le coach ait à intervenir.</p></div>
+      </li>
+      <li>
+        <div class="step-head"><span class="who a">Automatique</span><strong>Email de résultats, fauteuil libéré</strong></div>
+        <div class="step-body"><p>Le visiteur reçoit son email de résultats, avec la moyenne des participants de l'événement. Le fauteuil est aussitôt prêt pour le visiteur suivant.</p></div>
+      </li>
+    </ol>
+
+    <div class="callout">
+      <p class="t">Le lien « Réinitialiser ce fauteuil »</p>
+      <p>Un petit lien discret, en bas de l'écran du fauteuil. Utilisez-le si le fauteuil est bloqué, ou si une personne est partie en cours de séance sans terminer. Après confirmation, le fauteuil revient à l'écran de départ et la séance inachevée est effacée. Le lead, lui, est déjà dans Odoo. Le lien n'apparaît pas sur l'écran final, une fois la séance terminée.</p>
+    </div>
+
+    <div class="event-name" aria-labelledby="ev-h">
+      <h3 id="ev-h">Le nom de l'événement</h3>
+      <div class="names">
+        <div><span class="lbl">Nom actuel, depuis le 26.11.2026</span><span class="val">Murtner Weihnachtsmarkt 2026</span></div>
+        <div class="old"><span class="lbl">Nom précédent</span><span class="val">IFAS 2026</span></div>
+      </div>
+      <div class="prose">
+        <p>Pour les fauteuils, le nom de l'événement n'est pas choisi sur place : il est réglé dans l'administration de l'application, et <strong>c'est Raphaël qui a la main dessus</strong>.</p>
+        <p>Ce nom est repris dans l'email de résultats des visiteurs, il étiquette les séances dans les rapports et dans l'export, et il identifie les leads dans Odoo. La moyenne affichée dans l'email ne compte que les visiteurs du même événement.</p>
+        <p><strong>Avant chaque nouveau salon, demandez à Raphaël de mettre le nom à jour.</strong> C'est rapide, mais sans cette mise à jour, les visiteurs seront enregistrés sous le nom de l'événement précédent.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="faq-h">
+    <div class="part-head">
+      <span class="eyebrow">Dépannage</span>
+      <h2 id="faq-h">En cas de souci</h2>
+    </div>
+    <div class="faq">
+      <div><b>Les participants voient « Aucune séance en cours pour le moment ».</b><p>Aucune séance coach n'est ouverte. Créez-la dans l'espace coach, puis demandez-leur de recharger la page.</p></div>
+      <div><b>L'espace coach affiche une séance au lieu du formulaire de création.</b><p>Une séance précédente n'a pas été fermée. Terminez-la avec Fermer le questionnaire, puis Confirmer.</p></div>
+      <div><b>Un participant a choisi le mauvais numéro.</b><p>Il garde ce numéro pour l'après : l'important est d'utiliser le même numéro avant et après.</p></div>
+      <div><b>Un fauteuil est bloqué ou un visiteur est parti avant la fin.</b><p>Utilisez le lien Réinitialiser ce fauteuil, en bas de l'écran du fauteuil.</p></div>
+      <div><b>Message « Impossible de joindre la base de données ».</b><p>L'application réessaie toute seule toutes les 3 secondes. Si le message reste affiché plus de quelques minutes, contactez Raphaël.</p></div>
+    </div>
+  </section>
+
+  <section id="contact" aria-labelledby="contact-h">
+    <div class="part-head">
+      <span class="eyebrow">Contact</span>
+      <h2 id="contact-h">Votre interlocuteur</h2>
+    </div>
+    <div class="contact">
+      <img src="data:image/jpeg;base64,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" alt="Photo de Raphaël Sauvain">
+      <div class="lines">
+        <h3>Raphaël Sauvain</h3>
+        <p class="muted">Nom de l'événement pour les fauteuils, problème technique, question sur l'application.</p>
+        <div class="row"><span class="val" id="tel">079 241 98 08</span><button class="copy" type="button" data-copy="tel">Copier</button></div>
+        <div class="row"><span class="val" id="mail">raphael@crea-vision.ch</span><button class="copy" type="button" data-copy="mail">Copier</button></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  <p>Guide Survey App brainLight · brainLight Suisse · version du 26 novembre 2026</p>
+</footer>
+
+<script>
+  document.querySelectorAll(".copy").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var el = document.getElementById(btn.getAttribute("data-copy"));
+      var text = el.textContent.trim();
+      var done = function () { btn.textContent = "Copié"; setTimeout(function () { btn.textContent = "Copier"; }, 1500); };
+      var select = function () {
+        var r = document.createRange(); r.selectNodeContents(el);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        btn.textContent = "Sélectionné";
+        setTimeout(function () { btn.textContent = "Copier"; }, 1500);
+      };
+      try {
+        navigator.clipboard.writeText(text).then(done, select);
+      } catch (e) { select(); }
+    });
+  });
+</script>
+
+</body>
+</html>

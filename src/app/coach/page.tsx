@@ -17,6 +17,14 @@ export default function CoachHomePage() {
         >
           Créer une séance
         </Link>
+        {/* Static page (public/coach-guide.html via a rewrite), so a plain
+            link rather than client-side navigation. */}
+        <a
+          href="/coach/guide"
+          className="w-full rounded-2xl px-6 py-6 text-center text-lg font-semibold bg-white text-[#10142a] hover:brightness-95 transition"
+        >
+          Guide de l&apos;application
+        </a>
       </div>
     </main>
   );
