@@ -16,10 +16,20 @@ export default function CoachSessionPage() {
     undefined
   );
 
+  // True while the server can't be reached (e.g. the database is down or
+  // paused). The poll keeps retrying; the last known state stays on screen.
+  const [unreachable, setUnreachable] = useState(false);
+
   const fetchActive = useCallback(async () => {
-    const res = await fetch("/api/session/active", { cache: "no-store" });
-    const json = await res.json();
-    setSession(json.session);
+    try {
+      const res = await fetch("/api/session/active", { cache: "no-store" });
+      if (!res.ok) throw new Error(`active_${res.status}`);
+      const json = await res.json();
+      setSession(json.session ?? null);
+      setUnreachable(false);
+    } catch {
+      setUnreachable(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -28,19 +38,36 @@ export default function CoachSessionPage() {
     return () => clearInterval(interval);
   }, [fetchActive]);
 
+  const banner = unreachable ? (
+    <p className="mx-auto mt-6 max-w-md rounded-xl bg-panel px-4 py-3 text-center text-sm text-danger">
+      Impossible de joindre la base de données. Nouvel essai automatique
+      toutes les 3 secondes…
+    </p>
+  ) : null;
+
   if (session === undefined) {
     return (
-      <main className="flex-1 flex items-center justify-center">
-        <p className="text-text-muted">Chargement…</p>
+      <main className="flex-1 flex flex-col items-center justify-center px-6">
+        {unreachable ? banner : <p className="text-text-muted">Chargement…</p>}
       </main>
     );
   }
 
   if (!session) {
-    return <CreateSessionForm onCreated={setSession} />;
+    return (
+      <>
+        {banner}
+        <CreateSessionForm onCreated={setSession} />
+      </>
+    );
   }
 
-  return <LiveSession session={session} onChange={setSession} />;
+  return (
+    <>
+      {banner}
+      <LiveSession session={session} onChange={setSession} />
+    </>
+  );
 }
 
 function CreateSessionForm({
@@ -70,12 +97,14 @@ function CreateSessionForm({
             : {}),
         }),
       });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(json.error ?? "Une erreur est survenue.");
         return;
       }
       onCreated(json.session);
+    } catch {
+      setError("Impossible de joindre le serveur. Vérifie la connexion et réessaie.");
     } finally {
       setSubmitting(false);
     }
@@ -186,6 +215,7 @@ function LiveSession({
   );
   const [confirmClose, setConfirmClose] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [togglingNumber, setTogglingNumber] = useState<number | null>(null);
   const [notes, setNotes] = useState(session.notes ?? "");
   const [savingNotes, setSavingNotes] = useState(false);
@@ -272,14 +302,18 @@ function LiveSession({
 
   async function handleStart() {
     setBusy(true);
+    setActionError(null);
     try {
       const res = await fetch("/api/session/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ session_id: session.id }),
       });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
       if (res.ok) onChange(json.session);
+      else setActionError("La séance n'a pas pu démarrer. Réessaie dans un instant.");
+    } catch {
+      setActionError("Impossible de joindre le serveur. Réessaie dans un instant.");
     } finally {
       setBusy(false);
     }
@@ -287,6 +321,7 @@ function LiveSession({
 
   async function handleClose() {
     setBusy(true);
+    setActionError(null);
     try {
       if (notes !== (session.notes ?? "")) {
         await fetch("/api/session/notes", {
@@ -301,6 +336,9 @@ function LiveSession({
         body: JSON.stringify({ session_id: session.id }),
       });
       if (res.ok) onChange(null);
+      else setActionError("Le questionnaire n'a pas pu être fermé. Réessaie dans un instant.");
+    } catch {
+      setActionError("Impossible de joindre le serveur. Réessaie dans un instant.");
     } finally {
       setBusy(false);
     }
@@ -370,6 +408,10 @@ function LiveSession({
             <p className="text-xs text-text-muted">Enregistrement…</p>
           )}
         </div>
+
+        {actionError && (
+          <p className="text-sm text-danger text-center">{actionError}</p>
+        )}
 
         {session.phase === "before" && (
           <Button onClick={handleStart} disabled={busy}>
