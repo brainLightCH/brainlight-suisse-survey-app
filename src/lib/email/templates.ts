@@ -20,6 +20,13 @@ export interface ResultsEmailParams {
   metrics: MetricResult[];
   ctaUrl: string;
   logoUrl: string;
+  /**
+   * "expo" (default): trade-show wording, event name used as is ("lors
+   * d'IFAS 2026"). "coach": showroom / event / Energy Days sessions — the
+   * name is whatever the coach typed, so it is quoted to keep every
+   * sentence grammatical, and the neutral message doesn't mention a fair.
+   */
+  context?: "expo" | "coach";
 }
 
 const CONTACT_EMAIL = "info@brainlight-suisse.ch";
@@ -51,6 +58,11 @@ const COPY = {
       "En quelques minutes seulement, votre corps et votre esprit ont pu ressentir les bienfaits d'une séance brainLight.",
     neutral:
       "Une première séance dans l'effervescence d'un salon est une expérience particulière. Dans un cadre calme et avec une utilisation régulière, les effets se révèlent pleinement.",
+    coachIntro: (e: string) =>
+      `Merci d'avoir participé à une séance brainLight lors de l'événement « ${e} » ! Nous avons le plaisir de vous transmettre vos résultats ci-dessous.`,
+    coachAverage: (e: string) => `Moyenne des participants « ${e} »`,
+    coachNeutral:
+      "Une première séance est une expérience particulière. Avec une utilisation régulière, les effets se révèlent pleinement.",
     imagine:
       "Imaginez l'impact que pourrait avoir une utilisation régulière sur le bien-être et la performance au quotidien, pour vous et vos collaborateurs.",
     advice:
@@ -81,6 +93,11 @@ const COPY = {
       "In nur wenigen Minuten konnten Sie die Vorteile einer brainLight-Sitzung für Körper und Geist spüren.",
     neutral:
       "Eine erste Sitzung im lebhaften Umfeld einer Messe ist eine besondere Erfahrung. In ruhiger Umgebung und bei regelmässiger Nutzung entfaltet sich die Wirkung voll.",
+    coachIntro: (e: string) =>
+      `Vielen Dank für Ihre Teilnahme an einer brainLight-Sitzung im Rahmen von «${e}»! Wir freuen uns, Ihnen untenstehend Ihre Ergebnisse zu übermitteln.`,
+    coachAverage: (e: string) => `Durchschnitt aller Teilnehmenden von «${e}»`,
+    coachNeutral:
+      "Eine erste Sitzung ist eine besondere Erfahrung. Bei regelmässiger Nutzung entfaltet sich die Wirkung voll.",
     imagine:
       "Stellen Sie sich vor, welche Wirkung eine regelmässige Nutzung auf das Wohlbefinden und die Leistungsfähigkeit im Alltag für Sie und Ihre Mitarbeitenden haben könnte.",
     advice:
@@ -150,6 +167,10 @@ export function renderResultsEmail(p: ResultsEmailParams): {
 } {
   const c = COPY[p.lang];
   const subject = c.subject(p.eventName);
+  const coach = p.context === "coach";
+  const intro = coach ? c.coachIntro : c.intro;
+  const averageLabel = coach ? c.coachAverage : c.average;
+  const neutral = coach ? c.coachNeutral : c.neutral;
   // The closing message follows the stress result, as before.
   const stress = p.metrics.find((m) => m.key === "stress");
   const positive =
@@ -182,7 +203,7 @@ export function renderResultsEmail(p: ResultsEmailParams): {
           ? row(c.reduction, `${m.reduction} %`, "", "#1A9E3E")
           : "",
         m.average !== null && m.average > 0
-          ? row(c.average(p.eventName), `${m.average} %`)
+          ? row(averageLabel(p.eventName), `${m.average} %`)
           : "",
       ].join("")
     )
@@ -207,7 +228,7 @@ export function renderResultsEmail(p: ResultsEmailParams): {
   )}" width="160" alt="brainLight Suisse" style="display:block;border:0;width:160px;max-width:100%;height:auto;"></td></tr>
 <tr><td style="padding:28px 28px 8px;">
 <p style="${p16}">${esc(c.greeting(p.prenom))}</p>
-<p style="${p16}">${esc(c.intro(p.eventName))}</p>
+<p style="${p16}">${esc(intro(p.eventName))}</p>
 </td></tr>
 <tr><td style="padding:0 28px 16px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F3F5FB;border-radius:12px;"><tr><td style="padding:12px 20px;">
@@ -215,7 +236,7 @@ export function renderResultsEmail(p: ResultsEmailParams): {
 </td></tr></table>
 </td></tr>
 <tr><td style="padding:8px 28px 0;">
-<p style="${p16}">${esc(positive ? c.positive : c.neutral)}</p>
+<p style="${p16}">${esc(positive ? c.positive : neutral)}</p>
 <p style="${p16}">${esc(c.imagine)}</p>
 <p style="${p16}">${esc(c.advice)}</p>
 </td></tr>
@@ -244,7 +265,7 @@ ${esc(c.mail)}
   const text = [
     c.greeting(p.prenom),
     "",
-    c.intro(p.eventName),
+    intro(p.eventName),
     "",
     ...p.metrics.flatMap((m) => [
       c.metricTitles[m.key].toUpperCase(),
@@ -254,11 +275,11 @@ ${esc(c.mail)}
         ? `${c.reduction}${c.colon} ${m.reduction} %`
         : "",
       m.average !== null && m.average > 0
-        ? `${c.average(p.eventName)}${c.colon} ${m.average} %`
+        ? `${averageLabel(p.eventName)}${c.colon} ${m.average} %`
         : "",
       "",
     ]),
-    positive ? c.positive : c.neutral,
+    positive ? c.positive : neutral,
     "",
     c.imagine,
     "",

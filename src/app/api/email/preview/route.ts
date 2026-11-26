@@ -18,9 +18,12 @@ function sampleMetric(
   return { key, before, after, reduction: reductionPercent(before, after), average };
 }
 
-function sample(lang: Lang, baseUrl: string, neutral: boolean) {
-  const eventName = process.env.EXPO_EVENT_NAME?.trim() || "IFAS 2026";
+function sample(lang: Lang, baseUrl: string, neutral: boolean, coach: boolean) {
+  const eventName = coach
+    ? "Showroom Crissier"
+    : process.env.EXPO_EVENT_NAME?.trim() || "IFAS 2026";
   return renderResultsEmail({
+    context: coach ? "coach" : "expo",
     lang,
     prenom: lang === "fr" ? "Marie" : "Max",
     eventName,
@@ -34,17 +37,19 @@ function sample(lang: Lang, baseUrl: string, neutral: boolean) {
   });
 }
 
-// ?render=fr|de[&variant=neutral] → HTML in the browser, nothing is sent.
+// ?render=fr|de[&variant=neutral][&context=coach] → HTML in the browser,
+// nothing is sent. context=coach shows the coach-session wording.
 // ?to=addr&secret=… → sends a FR and a DE preview to that address. The
 // secret keeps this from being used to mail arbitrary people.
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const baseUrl = url.origin;
   const neutral = url.searchParams.get("variant") === "neutral";
+  const coach = url.searchParams.get("context") === "coach";
 
   const render = url.searchParams.get("render");
   if (render === "fr" || render === "de") {
-    return new Response(sample(render, baseUrl, neutral).html, {
+    return new Response(sample(render, baseUrl, neutral, coach).html, {
       headers: { "Content-Type": "text/html; charset=utf-8" },
     });
   }
@@ -61,7 +66,7 @@ export async function GET(request: Request) {
 
   const results: Record<string, unknown> = {};
   for (const lang of ["fr", "de"] as const) {
-    const { subject, html, text } = sample(lang, baseUrl, neutral);
+    const { subject, html, text } = sample(lang, baseUrl, neutral, coach);
     results[lang] = await sendEmail({
       to,
       subject: `[Aperçu] ${subject}`,

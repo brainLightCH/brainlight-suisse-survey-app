@@ -61,6 +61,8 @@ export async function POST(request: Request) {
       active_numbers,
       is_active: true,
       station: 0,
+      // Participants who tick the opt-in get their results by email.
+      send_results_email: true,
     })
     .select()
     .single();

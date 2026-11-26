@@ -49,6 +49,8 @@ export default function ParticipantPage() {
   );
   const [lastSessionId, setLastSessionId] = useState<string | null>(null);
   const [lastPhase, setLastPhase] = useState<string | null>(null);
+  // Set from the last submission: true once the results email went out.
+  const [emailSent, setEmailSent] = useState(false);
   const [sessionChanged, setSessionChanged] = useState(false);
   const [beforeNumbers, setBeforeNumbers] = useState<number[]>([]);
   const [respondedNumbers, setRespondedNumbers] = useState<number[]>([]);
@@ -252,12 +254,13 @@ export default function ParticipantPage() {
           phase={session.phase}
           participantNumber={participantNumber}
           lang={lang}
-          onSubmitted={() => {
+          onSubmitted={(sent) => {
             writeStoredSubmission({
               sessionId: session.id,
               phase: session.phase,
               participantNumber,
             });
+            setEmailSent(sent);
             setView("done");
           }}
         />
@@ -276,6 +279,11 @@ export default function ParticipantPage() {
         {session.phase === "before" && (
           <p className="text-text-muted text-sm text-center mt-2">
             {t.closeDeviceMessage}
+          </p>
+        )}
+        {emailSent && (
+          <p className="text-text-muted text-sm text-center mt-2">
+            {t.expoEmailSent}
           </p>
         )}
       </Centered>

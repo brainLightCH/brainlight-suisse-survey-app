@@ -12,7 +12,8 @@ interface ParticipantFormProps {
   phase: Phase;
   participantNumber: number;
   lang: Lang;
-  onSubmitted: () => void;
+  /** `emailSent`: the server confirmed the results email went out. */
+  onSubmitted: (emailSent: boolean) => void;
 }
 
 export default function ParticipantForm({
@@ -39,6 +40,16 @@ export default function ParticipantForm({
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit() {
+    // The opt-in includes receiving the results by email, so an email is
+    // required once it's ticked.
+    if (
+      phase === "after" &&
+      leadOptin &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+    ) {
+      setError(t.emailRequired);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -65,7 +76,8 @@ export default function ParticipantForm({
         return;
       }
       if (!res.ok) throw new Error("submit_failed");
-      onSubmitted();
+      const json = await res.json().catch(() => null);
+      onSubmitted(Boolean(json?.email_sent));
     } catch {
       setError(t.errorGeneric);
     } finally {

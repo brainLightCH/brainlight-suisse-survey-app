@@ -31,7 +31,9 @@ export const translations = {
     usageLow: "Pas du tout",
     usageHigh: "Certainement",
     leadOptin:
-      "Je souhaite être recontacté·e par brainLight Suisse et j'accepte que mes coordonnées soient utilisées à cette fin uniquement.",
+      "Je souhaite recevoir mes résultats par email et être recontacté·e par brainLight Suisse ; j'accepte que mes coordonnées soient utilisées à ces fins uniquement.",
+    emailRequired:
+      "Merci d'indiquer une adresse email valide pour recevoir vos résultats.",
     firstName: "Prénom",
     lastName: "Nom",
     email: "Email",
@@ -90,7 +92,9 @@ export const translations = {
     usageLow: "Gar nicht",
     usageHigh: "Sicher",
     leadOptin:
-      "Ich möchte von brainLight Suisse kontaktiert werden und bin damit einverstanden, dass meine Kontaktdaten ausschliesslich zu diesem Zweck verwendet werden.",
+      "Ich möchte meine Ergebnisse per E-Mail erhalten und von brainLight Suisse kontaktiert werden; ich bin damit einverstanden, dass meine Kontaktdaten ausschliesslich zu diesen Zwecken verwendet werden.",
+    emailRequired:
+      "Bitte geben Sie eine gültige E-Mail-Adresse an, um Ihre Ergebnisse zu erhalten.",
     firstName: "Vorname",
     lastName: "Nachname",
     email: "E-Mail",

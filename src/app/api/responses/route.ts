@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendLeadToCrm } from "@/lib/email/crm";
+import { sendCoachResultsEmail } from "@/lib/email/results";
 import { SESSION_TYPE_LABELS } from "@/lib/constants";
 import type { SessionType } from "@/lib/types";
 
@@ -65,7 +66,9 @@ export async function POST(request: Request) {
 
   const { data: session, error: sessionError } = await supabaseAdmin
     .from("sessions")
-    .select("id, phase, is_active, type, event_name, company_name, sector")
+    .select(
+      "id, phase, is_active, type, event_name, company_name, sector, send_results_email"
+    )
     .eq("id", session_id)
     .maybeSingle();
 
@@ -77,6 +80,12 @@ export async function POST(request: Request) {
   }
 
   const isLead = phase === "after" && Boolean(lead_optin);
+
+  // Ticking the opt-in now also means "send me my results": an email is
+  // required (the form checks it too).
+  if (isLead && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email ?? "").trim())) {
+    return NextResponse.json({ error: "invalid_email" }, { status: 400 });
+  }
 
   const { data, error } = await supabaseAdmin
     .from("responses")
@@ -98,6 +107,8 @@ export async function POST(request: Request) {
         email: isLead ? email ?? null : null,
         telephone: isLead ? telephone ?? null : null,
         entreprise: isLead ? entreprise ?? null : null,
+        // The opt-in wording covers receiving the results by email.
+        email_consent: isLead,
       },
       { onConflict: "session_id,phase,participant_number" }
     )
@@ -153,5 +164,20 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ response: data });
+  // Results email, same as Expo but with the coach's event name. Saved data
+  // never depends on it; the flag only drives the confirmation message.
+  let emailSent = false;
+  if (isLead && session.type !== "expo") {
+    try {
+      emailSent = await sendCoachResultsEmail({
+        session,
+        afterRow: data,
+        baseUrl: new URL(request.url).origin,
+      });
+    } catch (e) {
+      console.error("[results-email] unexpected failure:", e);
+    }
+  }
+
+  return NextResponse.json({ response: data, email_sent: emailSent });
 }
